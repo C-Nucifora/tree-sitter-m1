@@ -1,0 +1,18 @@
+# Node
+node_modules/
+
+# Rust (library crate: lockfile not committed)
+/target/
+Cargo.lock
+
+# tree-sitter / native build artifacts
+/build/
+*.wasm
+*.o
+*.obj
+
+# OS
+.DS_Store
+
+# NOTE: src/parser.c and src/tree_sitter/ ARE committed (generated, but kept in
+# VCS so the Rust crate builds without the tree-sitter CLI installed).

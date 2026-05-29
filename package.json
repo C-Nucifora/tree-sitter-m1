@@ -1,0 +1,14 @@
+{
+  "name": "tree-sitter-m1",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Tree-sitter grammar for the MoTeC M1 script language (.m1scr)",
+  "scripts": {
+    "generate": "tree-sitter generate",
+    "test": "tree-sitter test",
+    "parse": "tree-sitter parse"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.25.0"
+  }
+}

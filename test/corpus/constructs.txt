@@ -1,0 +1,129 @@
+================================================================================
+bitwise shift and and
+================================================================================
+
+local <Boolean> SystemReady = ((Mosko.Trilby Glonk >> 8) & 0x01) eq 0x01;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (local_declaration
+    (type_annotation
+      (identifier))
+    (identifier)
+    (binary_expression
+      (parenthesized_expression
+        (binary_expression
+          (parenthesized_expression
+            (binary_expression
+              (member_expression
+                (identifier)
+                (identifier))
+              (number)))
+          (number)))
+      (number))))
+
+================================================================================
+static local with negative initializer
+================================================================================
+
+static local <Integer> i = -1;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (local_declaration
+    (type_annotation
+      (identifier))
+    (identifier)
+    (unary_expression
+      (number))))
+
+================================================================================
+unsigned integer suffix
+================================================================================
+
+local diagnumber = 0u;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (local_declaration
+    (identifier)
+    (number)))
+
+================================================================================
+multi-word name with trailing number
+================================================================================
+
+Cralbo.QHM.Dorn.Plor.XV Glim 4 = Calculate.NAN();
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    (member_expression
+      (member_expression
+        (member_expression
+          (member_expression
+            (identifier)
+            (identifier))
+          (identifier))
+        (identifier))
+      (identifier))
+    (call_expression
+      (member_expression
+        (identifier)
+        (identifier))
+      (argument_list))))
+
+================================================================================
+when / is state machine
+================================================================================
+
+when (Active)
+{
+	is (Off)
+	{
+		Active = Wexlar Bonquil Mosko.Vor;
+	}
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (when_statement
+    (identifier)
+    (is_clause
+      (identifier)
+      (block
+        (assignment_statement
+          (identifier)
+          (member_expression
+            (identifier)
+            (identifier)))))))
+
+================================================================================
+expand loop with interpolation in names
+================================================================================
+
+expand (SEG = 1 to 6)
+{
+	Klumph $(SEG).Glonk 4 = naxID Bnk $(SEG) + 1;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (expand_statement
+    (identifier)
+    (number)
+    (number)
+    (block
+      (assignment_statement
+        (member_expression
+          (identifier)
+          (identifier))
+        (binary_expression
+          (identifier)
+          (number))))))

@@ -1,0 +1,23 @@
+{
+  "grammars": [
+    {
+      "name": "m1",
+      "camelcase": "M1",
+      "scope": "source.m1",
+      "path": ".",
+      "file-types": ["m1scr"]
+    }
+  ],
+  "metadata": {
+    "version": "0.0.1",
+    "description": "Tree-sitter grammar for the MoTeC M1 script language (.m1scr)"
+  },
+  "bindings": {
+    "c": true,
+    "go": false,
+    "node": false,
+    "python": false,
+    "rust": true,
+    "swift": false
+  }
+}
