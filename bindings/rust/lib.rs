@@ -20,6 +20,9 @@ pub const HIGHLIGHTS_QUERY: &str = include_str!("../../queries/highlights.scm");
 pub const INDENTS_QUERY: &str = include_str!("../../queries/indents.scm");
 /// Folding query source (`queries/folds.scm`).
 pub const FOLDS_QUERY: &str = include_str!("../../queries/folds.scm");
+/// The grammar's generated node-types description (`src/node-types.json`),
+/// consumed by downstream codegen (e.g. m1-core's `Kind` generator).
+pub const NODE_TYPES_JSON: &str = include_str!("../../src/node-types.json");
 
 #[cfg(test)]
 mod tests {
@@ -29,5 +32,11 @@ mod tests {
         parser
             .set_language(&super::LANGUAGE.into())
             .expect("Error loading M1 grammar");
+    }
+
+    #[test]
+    fn node_types_json_is_present() {
+        assert!(super::NODE_TYPES_JSON.trim_start().starts_with('['));
+        assert!(super::NODE_TYPES_JSON.contains("\"identifier\""));
     }
 }
