@@ -29,6 +29,24 @@ So the `identifier` token is produced by an **external scanner**
 refusing to absorb reserved words. The reserved set there must stay in sync with
 the keyword strings in [`grammar.js`](grammar.js).
 
+## Compile-time interpolation: `$(VAR)`
+
+A standalone `$(VAR)` used as an operand parses as its own `interpolation`
+node:
+
+```
+x = $(SEG) + 1;   // value is (binary_expression (interpolation) (number))
+```
+
+When `$(VAR)` instead leads a multi-word name it stays inside the
+`identifier` segment, preserving "one identifier = one path segment":
+
+```
+naxID Bnk $(SEG) Vlim = 1;   // target is a single (identifier)
+```
+
+(Example names are synthetic placeholders, not from any real project.)
+
 ## Layout
 
 | Path | Purpose |

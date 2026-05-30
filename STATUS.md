@@ -7,7 +7,7 @@ EV-M1 corpus on 2026-05-30.
 
 | Repo            | State            | Evidence |
 |-----------------|------------------|----------|
-| `tree-sitter-m1`| **Phase 1 complete** | Grammar + external scanner + queries + Rust bindings. `src/parser.c` regenerated. **All 80 corpus scripts parse with zero ERROR/MISSING nodes** (`scripts/check-corpus.sh`). 6/6 construct regression tests pass (`test/corpus/constructs.txt`). |
+| `tree-sitter-m1`| **Phase 1 complete** | Grammar + external scanner + queries + Rust bindings. `src/parser.c` regenerated. **All 80 corpus scripts parse with zero ERROR/MISSING nodes** (`scripts/check-corpus.sh`). 6/6 construct regression tests pass (`test/corpus/constructs.txt`). v2: standalone `interpolation` node; enriched highlights + new `locals.scm`; corpus expanded (interpolation/scanner-edges/errors/literals). Follow-ups: m1-core must re-vendor `parser.c`/`scanner.c`/`node-types.json` and regenerate `Kind` (gains `Interpolation`); `.nvim-test/queries/m1` must be re-copied and gain `indents.scm`. |
 | `m1-core`       | **v1 in progress** | CST helpers (wrapped tree-sitter nodes), shared `Diagnostic` type, and syntax-error diagnostics. Generated `Kind` enum (committed, freshness-tested). Corpus regression test green. Symbol model deferred. |
 | `m1-fmt`        | **not started**  | Only empty `src/` and `tests/` dirs. |
 | `m1-lint`       | **not started**  | Only empty `src/` and `tests/` dirs. |
