@@ -11,6 +11,9 @@
  *     QZP MV31 R7 TKN 5X Glim Bront.Plarq Volim
  *     Wexlar Bonquil Mosko.Vor
  *
+ * (Example identifiers shown here are synthetic placeholders, not from any
+ * real project; the grammar and corpus tests were anonymised.)
+ *
  * A single path *segment* ("Vund Klee", "Trilby Glonk", "QZP MV31 R7 TKN 5X Glim
  * Bront") is therefore a run of space-separated words. We cannot express that
  * with a regex token without also swallowing the spaces that separate a name
