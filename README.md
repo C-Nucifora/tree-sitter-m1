@@ -34,7 +34,7 @@ the keyword strings in [`grammar.js`](grammar.js).
 | `src/parser.c` | Generated parser (committed so the Rust crate builds without the CLI) |
 | `queries/*.scm` | highlight / indent / fold / injection queries |
 | `bindings/rust/` | Rust crate exposing `LANGUAGE` + query strings |
-| `test/corpus/` | tree-sitter corpus tests (sourced from real m1-example scripts) |
+| `test/corpus/` | tree-sitter corpus tests covering the grammar's constructs |
 
 ## Develop
 
