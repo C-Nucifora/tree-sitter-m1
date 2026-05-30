@@ -29,6 +29,24 @@ So the `identifier` token is produced by an **external scanner**
 refusing to absorb reserved words. The reserved set there must stay in sync with
 the keyword strings in [`grammar.js`](grammar.js).
 
+## Compile-time interpolation: `$(VAR)`
+
+A standalone `$(VAR)` used as an operand parses as its own `interpolation`
+node:
+
+```
+x = $(SEG) + 1;   // value is (binary_expression (interpolation) (number))
+```
+
+When `$(VAR)` instead leads a multi-word name it stays inside the
+`identifier` segment, preserving "one identifier = one path segment":
+
+```
+naxID Bnk $(SEG) Vlim = 1;   // target is a single (identifier)
+```
+
+(Example names are synthetic placeholders, not from any real project.)
+
 ## Layout
 
 | Path | Purpose |
@@ -39,6 +57,35 @@ the keyword strings in [`grammar.js`](grammar.js).
 | `queries/*.scm` | highlight / indent / fold / injection queries |
 | `bindings/rust/` | Rust crate exposing `LANGUAGE` + query strings |
 | `test/corpus/` | tree-sitter corpus tests covering the grammar's constructs |
+
+## The toolchain workspace
+
+The M1 toolchain lives in **six separate repositories** that depend on each other
+through Cargo **path** dependencies. They are not published to crates.io, so the
+Rust crates do not build from a standalone single-repo clone — clone the whole set
+as siblings under one parent directory:
+
+```
+<parent>/
+├── tree-sitter-m1/   # grammar (root of the dependency graph) — this repo
+├── m1-core/          # parse / CST / diagnostics; depends on ../tree-sitter-m1
+├── m1-lint/          # linter;          depends on ../m1-core
+├── m1-fmt/           # formatter;       depends on ../m1-core
+├── m1-typecheck/     # type checker;    depends on ../m1-core
+└── m1-lsp/           # language server; depends on the four above
+```
+
+`tree-sitter-m1` is the **root**: it has no sibling dependencies and builds on its
+own. All five Rust crates depend on it (directly or transitively) via
+`tree-sitter-m1 = { path = "../tree-sitter-m1" }`. In particular `m1-core`
+regenerates its `Kind` enum from this crate's `node-types.json`, so a grammar
+change here ripples downstream.
+
+Because the repos are independent on GitHub, this coupling is **not visible
+there**: each repo's CI and PRs see only itself, and there is no cross-repo PR
+link. Build/merge ordering across the stack is a manual, local-workspace concern.
+The `m1-example` example project (used by some corpus tests) is an optional further
+sibling.
 
 ## Develop
 

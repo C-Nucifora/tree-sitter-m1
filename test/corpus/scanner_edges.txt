@@ -1,0 +1,66 @@
+================================================================================
+name immediately followed by eq keyword
+================================================================================
+
+Foo Bar eq Baz Qux;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (expression_statement
+    (binary_expression
+      (identifier)
+      (identifier))))
+
+================================================================================
+trailing space before dot separator
+================================================================================
+
+Foo Bar .Baz = 1;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    (member_expression
+      (identifier)
+      (identifier))
+    (number)))
+
+================================================================================
+pathological long multi-word name
+================================================================================
+
+QZP MV31 R7 TKN 5X Glim Bront = 1;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    (identifier)
+    (number)))
+
+================================================================================
+digit-led continuation word
+================================================================================
+
+Cralbo.QHM.Dorn.Plor.XV Glim 4 = Calculate.NAN();
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    (member_expression
+      (member_expression
+        (member_expression
+          (member_expression
+            (identifier)
+            (identifier))
+          (identifier))
+        (identifier))
+      (identifier))
+    (call_expression
+      (member_expression
+        (identifier)
+        (identifier))
+      (argument_list))))

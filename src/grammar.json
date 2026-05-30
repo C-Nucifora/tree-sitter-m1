@@ -434,6 +434,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "interpolation"
+        },
+        {
+          "type": "SYMBOL",
           "name": "member_expression"
         },
         {
@@ -1199,6 +1203,10 @@
     {
       "type": "SYMBOL",
       "name": "identifier"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "interpolation"
     }
   ],
   "inline": [],

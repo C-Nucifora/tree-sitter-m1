@@ -48,8 +48,10 @@ module.exports = grammar({
   // Whitespace and comments are insignificant between tokens.
   extras: ($) => [/\s/, $.line_comment, $.block_comment],
 
-  // The space-joined path segment is produced by the external scanner.
-  externals: ($) => [$.identifier],
+  // The space-joined path segment and the standalone `$(VAR)` interpolation are
+  // both produced by the external scanner. ORDER MUST MATCH the TokenType enum
+  // in src/scanner.c (IDENTIFIER, INTERPOLATION).
+  externals: ($) => [$.identifier, $.interpolation],
 
   conflicts: ($) => [
     // `a.b` may be the target of an assignment or a standalone expression
@@ -59,6 +61,12 @@ module.exports = grammar({
   ],
 
   rules: {
+    // NOTE: `interpolation` ($(VAR) as a standalone operand, e.g. `x = $(SEG)+1`)
+    // is an external token produced by src/scanner.c — it has no rule body here,
+    // only the `externals` declaration above and the `_expression` reference.
+    // A `$(VAR)` that leads a multi-word name (`$(SEG) Vlim ...`) folds into the
+    // `identifier` segment instead, preserving "one identifier = one path
+    // segment". (Example names are synthetic placeholders, not from any project.)
     source_file: ($) => repeat($._statement),
 
     // ---- Statements ---------------------------------------------------------
@@ -154,6 +162,7 @@ module.exports = grammar({
     _expression: ($) =>
       choice(
         $.identifier,
+        $.interpolation,
         $.member_expression,
         $.call_expression,
         $.unary_expression,

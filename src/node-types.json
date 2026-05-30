@@ -24,6 +24,10 @@
           "named": true
         },
         {
+          "type": "interpolation",
+          "named": true
+        },
+        {
           "type": "member_expression",
           "named": true
         },
@@ -101,6 +105,10 @@
             "named": true
           },
           {
+            "type": "interpolation",
+            "named": true
+          },
+          {
             "type": "member_expression",
             "named": true
           },
@@ -144,6 +152,10 @@
           },
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "interpolation",
             "named": true
           },
           {
@@ -196,6 +208,10 @@
           },
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "interpolation",
             "named": true
           },
           {
@@ -339,6 +355,10 @@
             "named": true
           },
           {
+            "type": "interpolation",
+            "named": true
+          },
+          {
             "type": "member_expression",
             "named": true
           },
@@ -449,6 +469,10 @@
             "named": true
           },
           {
+            "type": "interpolation",
+            "named": true
+          },
+          {
             "type": "member_expression",
             "named": true
           },
@@ -525,6 +549,10 @@
             "named": true
           },
           {
+            "type": "interpolation",
+            "named": true
+          },
+          {
             "type": "member_expression",
             "named": true
           },
@@ -568,6 +596,10 @@
           },
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "interpolation",
             "named": true
           },
           {
@@ -643,6 +675,10 @@
           "named": true
         },
         {
+          "type": "interpolation",
+          "named": true
+        },
+        {
           "type": "member_expression",
           "named": true
         },
@@ -691,6 +727,10 @@
           },
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "interpolation",
             "named": true
           },
           {
@@ -776,6 +816,10 @@
             "named": true
           },
           {
+            "type": "interpolation",
+            "named": true
+          },
+          {
             "type": "member_expression",
             "named": true
           },
@@ -835,6 +879,10 @@
           },
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "interpolation",
             "named": true
           },
           {
@@ -900,6 +948,10 @@
             "named": true
           },
           {
+            "type": "interpolation",
+            "named": true
+          },
+          {
             "type": "member_expression",
             "named": true
           },
@@ -959,6 +1011,10 @@
         },
         {
           "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "interpolation",
           "named": true
         },
         {
@@ -1057,6 +1113,10 @@
             "named": true
           },
           {
+            "type": "interpolation",
+            "named": true
+          },
+          {
             "type": "member_expression",
             "named": true
           },
@@ -1103,6 +1163,10 @@
             "named": true
           },
           {
+            "type": "interpolation",
+            "named": true
+          },
+          {
             "type": "member_expression",
             "named": true
           },
@@ -1146,6 +1210,10 @@
           },
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "interpolation",
             "named": true
           },
           {
@@ -1236,6 +1304,10 @@
           "named": true
         },
         {
+          "type": "interpolation",
+          "named": true
+        },
+        {
           "type": "member_expression",
           "named": true
         },
@@ -1284,6 +1356,10 @@
           },
           {
             "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "interpolation",
             "named": true
           },
           {
@@ -1472,6 +1548,10 @@
   {
     "type": "if",
     "named": false
+  },
+  {
+    "type": "interpolation",
+    "named": true
   },
   {
     "type": "is",

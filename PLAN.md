@@ -54,15 +54,16 @@ Parse `.m1scr` into a concrete syntax tree. No semantics — that lives in
 - [ ] Function/scheduled-function definitions: the corpus is mostly statement
       bodies, but the language has function objects with typed inputs/outputs —
       confirm whether they ever appear in `.m1scr` text and grammar them if so.
-- [ ] Validate the scanner against pathological names
-      (`QZP MV31 R7 TKN 5X Glim Bront`, trailing-space-before-`.`,
-      name immediately followed by `eq`/`and`).
+- [x] Validate the scanner against pathological names (covered by
+      `test/corpus/scanner_edges.txt`) and standalone `$(VAR)` (now its own
+      `interpolation` node; `test/corpus/interpolation.txt`).
 - [ ] Decide handling of multi-word names whose first word is a keyword (should
       be impossible by MoTeC naming rules — assert via lint, not grammar).
 
 ## TODO — editor integration (handled in the Neovim plugin, tracked here)
 
-- [ ] `locals.scm` for scope-aware highlighting once `m1-core` defines scopes.
+- [x] `locals.scm` shipped (CST-only scopes + local/expand definitions);
+      channel/param resolution still pending `m1-core` scopes.
 - [ ] Verify indents.scm against the 4-space / brace style in CONTRIBUTING.md.
 
 ## Open questions for the owner
