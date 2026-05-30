@@ -1,0 +1,52 @@
+================================================================================
+standalone interpolation operand
+================================================================================
+
+x = $(SEG) + 1;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    (identifier)
+    (binary_expression
+      (interpolation)
+      (number))))
+
+================================================================================
+embedded interpolation stays one identifier
+================================================================================
+
+naxID Bnk $(SEG) Vlim = 1;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    (identifier)
+    (number)))
+
+================================================================================
+interpolation inside expand body
+================================================================================
+
+expand (SEG = 1 to 6)
+{
+	Klumph $(SEG).Glonk 4 = $(SEG) + 1;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (expand_statement
+    (identifier)
+    (number)
+    (number)
+    (block
+      (assignment_statement
+        (member_expression
+          (identifier)
+          (identifier))
+        (binary_expression
+          (interpolation)
+          (number))))))
