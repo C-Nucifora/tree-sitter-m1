@@ -1,0 +1,28 @@
+==================
+missing right-hand side
+:error
+==================
+
+x = ;
+
+---
+
+(source_file
+  (expression_statement
+    (identifier)
+    (ERROR)))
+
+==================
+unterminated call argument list
+:error
+==================
+
+Foo(1, 2
+
+---
+
+(source_file
+  (ERROR
+    (identifier)
+    (number)
+    (number)))

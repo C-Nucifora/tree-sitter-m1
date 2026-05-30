@@ -1,6 +1,6 @@
 [package]
 name = "tree-sitter-m1"
-version = "0.0.1"
+version = "0.2.0"
 edition = "2021"
 description = "M1 (MoTeC M1 script) grammar for tree-sitter"
 publish = false

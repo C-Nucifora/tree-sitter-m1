@@ -16,6 +16,10 @@
  * We greedily join "word SPACE word" but stop before a word that is reserved,
  * using mark_end() so the trailing " eq" is returned to the lexer as
  * look-ahead rather than being swallowed into the identifier.
+ *
+ * v2: a standalone `$(...)` operand (e.g. `x = $(SEG) + 1`) is emitted as a
+ * separate INTERPOLATION token; a `$(...)` that leads a multi-word name folds
+ * into the IDENTIFIER segment as before.
  */
 
 #include "tree_sitter/parser.h"
@@ -23,7 +27,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-enum TokenType { IDENTIFIER };
+enum TokenType { IDENTIFIER, INTERPOLATION };
 
 /* Mirrors the keyword tokens in grammar.js. Keep the two in sync. */
 static const char *const RESERVED[] = {
@@ -105,7 +109,7 @@ void tree_sitter_m1_external_scanner_deserialize(void *payload, const char *buff
 bool tree_sitter_m1_external_scanner_scan(void *payload, TSLexer *lexer,
                                           const bool *valid_symbols) {
   (void)payload;
-  if (!valid_symbols[IDENTIFIER]) {
+  if (!valid_symbols[IDENTIFIER] && !valid_symbols[INTERPOLATION]) {
     return false;
   }
 
@@ -115,13 +119,14 @@ bool tree_sitter_m1_external_scanner_scan(void *payload, TSLexer *lexer,
     lexer->advance(lexer, true);
   }
 
-  /* First unit of the segment: a word or a `$(...)` interpolation. Requiring a
-   * letter/`_`/`$` start keeps bare numeric literals (e.g. `, 16)`) from being
-   * lexed as identifiers. */
+  bool leads_with_interp = false;
+
+  /* First unit: a `$(...)` interpolation or a word. */
   if (lexer->lookahead == '$') {
     if (!try_read_interp(lexer)) {
       return false;
     }
+    leads_with_interp = true;
   } else if (is_word_start(lexer->lookahead)) {
     char word[64];
     read_word(lexer, word, sizeof(word));
@@ -131,12 +136,30 @@ bool tree_sitter_m1_external_scanner_scan(void *payload, TSLexer *lexer,
   } else {
     return false;
   }
-  lexer->mark_end(lexer); /* identifier currently ends after the first unit */
+  lexer->mark_end(lexer); /* token currently ends after the first unit */
+
+  /* A standalone `$(...)` operand becomes INTERPOLATION unless it is the head of
+   * a multi-word name. "Head of a name" means a space is followed by a genuine
+   * continuation unit (a word or another `$(...)`). A space followed by an
+   * operator/`;`/anything else (e.g. `$(SEG) + 1`) is still a standalone
+   * operand. We only know which after attempting the continuation loop, so we
+   * track whether it committed any unit. */
+  if (leads_with_interp && !valid_symbols[IDENTIFIER]) {
+    /* Identifier not allowed here: only an interpolation can stand. */
+    if (!valid_symbols[INTERPOLATION]) {
+      return false;
+    }
+    lexer->result_symbol = INTERPOLATION;
+    return true;
+  }
+  if (!leads_with_interp && !valid_symbols[IDENTIFIER]) {
+    return false;
+  }
 
   /* Extend with " <unit>" while the next unit is not a reserved word. A
-   * continuation word may begin with a digit ("XV Glim 4", "Glonk 9",
-   * "...FSE 5X Vund Klee"); a unit may also be a `$(...)` interpolation
-   * ("naxID Bnk $(SEG) Vlim $(NODE)"). */
+   * continuation word may begin with a digit ("XV Glim 4", "Glonk 9"); a unit
+   * may also be a `$(...)` interpolation ("naxID Bnk $(SEG) Vlim $(NODE)"). */
+  bool extended = false;
   for (;;) {
     if (lexer->lookahead != ' ') {
       break;
@@ -156,6 +179,14 @@ bool tree_sitter_m1_external_scanner_scan(void *payload, TSLexer *lexer,
       break;
     }
     lexer->mark_end(lexer); /* commit this unit into the identifier */
+    extended = true;
+  }
+
+  /* A leading `$(...)` that gained no continuation unit is a standalone operand:
+   * emit INTERPOLATION (when valid) rather than a single-segment identifier. */
+  if (leads_with_interp && !extended && valid_symbols[INTERPOLATION]) {
+    lexer->result_symbol = INTERPOLATION;
+    return true;
   }
 
   lexer->result_symbol = IDENTIFIER;
