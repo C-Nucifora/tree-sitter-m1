@@ -12,7 +12,7 @@
  *     Wexlar Bonquil Mosko.Vor
  *
  * A single path *segment* ("Vund Klee", "Trilby Glonk", "QZP MV31 R7 TKN 5X Glim
- * Left") is therefore a run of space-separated words. We cannot express that
+ * Bront") is therefore a run of space-separated words. We cannot express that
  * with a regex token without also swallowing the spaces that separate a name
  * from a following keyword/operator (e.g. `Pellow.KVB Bonquil eq ...`). So the
  * segment token is produced by an external scanner (see src/scanner.c) that
