@@ -19,6 +19,10 @@ Brenloft.Quassor.Vund Klee.Mosko.Trilby Glonk = CanComms.GetUnsignedInteger(h, 4
 Pellow.KVB Bonquil eq Wexlar Bonquil Mosko.Vor
 ```
 
+> **Note:** All example identifiers in this repo (here, in the grammar/scanner
+> comments, and in the corpus tests) are synthetic placeholders. The grammar and
+> tests were anonymised; the names are not drawn from any real project.
+
 A regex token can't express "a run of words, but stop before the keyword `eq`".
 So the `identifier` token is produced by an **external scanner**
 ([`src/scanner.c`](src/scanner.c)) that joins `word SPACE word` greedily while

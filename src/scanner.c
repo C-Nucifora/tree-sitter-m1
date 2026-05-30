@@ -11,6 +11,8 @@
  *             ^^^^^^^^^^                              segment "KVB Bonquil"
  *                        ^^                           keyword `eq` (NOT absorbed)
  *
+ * (The example name above is a synthetic placeholder, not from any real project.)
+ *
  * We greedily join "word SPACE word" but stop before a word that is reserved,
  * using mark_end() so the trailing " eq" is returned to the lexer as
  * look-ahead rather than being swallowed into the identifier.
