@@ -15,27 +15,32 @@ function M.setup()
     return
   end
 
-  local parser_config = parsers.get_parser_configs()
-  if parser_config.m1 then
-    return -- already registered (idempotent)
+  -- nvim-treesitter ≥ rewrite: require("nvim-treesitter.parsers") IS the
+  -- config table. Legacy builds expose get_parser_configs() instead.
+  local parser_config
+  if type(parsers.get_parser_configs) == "function" then
+    parser_config = parsers.get_parser_configs()
+  else
+    parser_config = parsers
+  end
+  if not parser_config or parser_config.m1 then
+    return -- already registered or API unavailable (idempotent)
   end
 
   -- Locate this plugin's own directory so we can point at the local source
   -- when developing; fall back to the GitHub URL for end users.
-  local plugin_dir = vim.fn.fnamemodify(
-    debug.getinfo(1, "S").source:sub(2), ":h:h:h"
-  )
+  local plugin_dir = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h:h")
   local local_src = plugin_dir .. "/src/parser.c"
   local use_local = vim.fn.filereadable(local_src) == 1
 
   parser_config.m1 = {
     install_info = use_local and {
-      url       = plugin_dir,
-      files     = { "src/parser.c", "src/scanner.c" },
-      generate  = false, -- grammar.js already compiled; don't re-run tree-sitter
+      url = plugin_dir,
+      files = { "src/parser.c", "src/scanner.c" },
+      generate = false, -- grammar.js already compiled; don't re-run tree-sitter
     } or {
-      url    = "https://github.com/C-Nucifora/tree-sitter-m1",
-      files  = { "src/parser.c", "src/scanner.c" },
+      url = "https://github.com/C-Nucifora/tree-sitter-m1",
+      files = { "src/parser.c", "src/scanner.c" },
       branch = "main",
     },
     filetype = "m1scr", -- the Neovim filetype that uses this parser
