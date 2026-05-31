@@ -152,3 +152,9 @@ gaps and next steps are in [`PLAN.md`](PLAN.md).
 
 Not yet chosen — decided by the repository owner. Treated as proprietary until
 then.
+
+## License
+
+Licensed under the GNU General Public License v3.0 or later (GPL-3.0-or-later) — see [LICENSE](LICENSE).
+
+Copyright (C) 2026 The M1 Tools authors.
