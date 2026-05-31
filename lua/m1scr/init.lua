@@ -15,9 +15,16 @@ function M.setup()
     return
   end
 
-  local parser_config = parsers.get_parser_configs()
-  if parser_config.m1 then
-    return -- already registered (idempotent)
+  -- nvim-treesitter ≥ rewrite: require("nvim-treesitter.parsers") IS the
+  -- config table. Legacy builds expose get_parser_configs() instead.
+  local parser_config
+  if type(parsers.get_parser_configs) == "function" then
+    parser_config = parsers.get_parser_configs()
+  else
+    parser_config = parsers
+  end
+  if not parser_config or parser_config.m1 then
+    return -- already registered or API unavailable (idempotent)
   end
 
   -- Locate this plugin's own directory so we can point at the local source
