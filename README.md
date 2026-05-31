@@ -119,14 +119,24 @@ Register the parser config before installing so nvim-treesitter recognises the l
     "C-Nucifora/tree-sitter-m1",
     dependencies = { "nvim-treesitter/nvim-treesitter" },
     config = function()
-        local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+        -- Map the `.m1scr` filetype to the `m1` tree-sitter language.
+        vim.filetype.add({ extension = { m1scr = "m1scr" } })
+        vim.treesitter.language.register("m1", "m1scr")
+
+        -- Register the parser. The nvim-treesitter rewrite returns the config
+        -- table directly; legacy builds expose get_parser_configs().
+        local parsers = require("nvim-treesitter.parsers")
+        local parser_config = type(parsers.get_parser_configs) == "function"
+                and parsers.get_parser_configs()
+            or parsers
         parser_config.m1 = {
             install_info = {
                 url = "https://github.com/C-Nucifora/tree-sitter-m1",
-                files = { "src/parser.c" },
+                -- The grammar has an external scanner, so scanner.c is required.
+                files = { "src/parser.c", "src/scanner.c" },
                 branch = "main",
             },
-            filetype = "m1",
+            filetype = "m1scr",
         }
         vim.cmd("TSInstall! m1")
     end,
