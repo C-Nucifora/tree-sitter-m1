@@ -110,6 +110,29 @@ let mut parser = tree_sitter::Parser::new();
 parser.set_language(&tree_sitter_m1::LANGUAGE.into())?;
 ```
 
+## Neovim setup
+
+Register the parser config before installing so nvim-treesitter recognises the language (avoids the `skipping unsupported language: m1` warning):
+
+```lua
+{
+    "C-Nucifora/tree-sitter-m1",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    config = function()
+        local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+        parser_config.m1 = {
+            install_info = {
+                url = "https://github.com/C-Nucifora/tree-sitter-m1",
+                files = { "src/parser.c" },
+                branch = "main",
+            },
+            filetype = "m1",
+        }
+        vim.cmd("TSInstall! m1")
+    end,
+}
+```
+
 ## Status
 
 First-pass grammar covering the constructs seen across the m1-example corpus. Known
