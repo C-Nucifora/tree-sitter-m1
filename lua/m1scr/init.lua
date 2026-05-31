@@ -29,20 +29,18 @@ function M.setup()
 
   -- Locate this plugin's own directory so we can point at the local source
   -- when developing; fall back to the GitHub URL for end users.
-  local plugin_dir = vim.fn.fnamemodify(
-    debug.getinfo(1, "S").source:sub(2), ":h:h:h"
-  )
+  local plugin_dir = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h:h")
   local local_src = plugin_dir .. "/src/parser.c"
   local use_local = vim.fn.filereadable(local_src) == 1
 
   parser_config.m1 = {
     install_info = use_local and {
-      url       = plugin_dir,
-      files     = { "src/parser.c", "src/scanner.c" },
-      generate  = false, -- grammar.js already compiled; don't re-run tree-sitter
+      url = plugin_dir,
+      files = { "src/parser.c", "src/scanner.c" },
+      generate = false, -- grammar.js already compiled; don't re-run tree-sitter
     } or {
-      url    = "https://github.com/C-Nucifora/tree-sitter-m1",
-      files  = { "src/parser.c", "src/scanner.c" },
+      url = "https://github.com/C-Nucifora/tree-sitter-m1",
+      files = { "src/parser.c", "src/scanner.c" },
       branch = "main",
     },
     filetype = "m1scr", -- the Neovim filetype that uses this parser
