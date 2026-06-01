@@ -60,4 +60,26 @@ mod tests {
         tree_sitter::Query::new(&language, super::INJECTIONS_QUERY)
             .expect("injections query failed to compile");
     }
+
+    #[test]
+    fn local_declaration_exposes_type_annotation_field() {
+        // Regression for #18: the type annotation must be reachable as a named
+        // field on `local_declaration`, not only positionally.
+        let mut parser = tree_sitter::Parser::new();
+        parser.set_language(&super::LANGUAGE.into()).unwrap();
+        let src = "local <Integer> foo = 1;\n";
+        let tree = parser.parse(src, None).unwrap();
+        let root = tree.root_node();
+        let decl = root.child(0).expect("local_declaration");
+        assert_eq!(decl.kind(), "local_declaration");
+        let annot = decl
+            .child_by_field_name("type_annotation")
+            .expect("type_annotation field should be present");
+        assert_eq!(annot.kind(), "type_annotation");
+        // The inner `type` field still resolves to the type identifier.
+        let ty = annot
+            .child_by_field_name("type")
+            .expect("type field on type_annotation");
+        assert_eq!(&src[ty.byte_range()], "Integer");
+    }
 }
