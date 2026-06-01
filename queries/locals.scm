@@ -6,6 +6,10 @@
 ; Scopes
 (source_file) @local.scope
 (block) @local.scope
+; The expand loop variable is defined on the `expand_statement`; scope it there
+; so it stays contained within the expand body and does not leak to the
+; enclosing source_file scope (#17).
+(expand_statement) @local.scope
 
 ; Definitions
 (local_declaration

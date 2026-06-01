@@ -11,8 +11,13 @@
   "if"
   "else"
   "when"
-  "is"
 ] @keyword.conditional
+
+; `is` lives inside `is_clause`; bare anonymous-string matching for a token
+; nested under a named rule is unreliable across nvim-treesitter versions, so
+; anchor it explicitly (#14).
+(is_clause
+  "is" @keyword.conditional)
 
 [
   "expand"
