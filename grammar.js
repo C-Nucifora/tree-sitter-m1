@@ -92,7 +92,7 @@ module.exports = grammar({
       seq(
         optional("static"),
         "local",
-        optional($.type_annotation),
+        field("type_annotation", optional($.type_annotation)),
         field("name", $.identifier),
         optional(seq("=", field("value", $._expression))),
         ";",
