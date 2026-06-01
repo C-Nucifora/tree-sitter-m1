@@ -94,10 +94,5 @@
 ; A property after a `.` (channels, enum members, fields)
 (member_expression property: (identifier) @property)
 
-; The left-most root of a member/channel path (e.g. `Vehicle` in
-; `Vehicle.SBG.IMU.Gyro.Z`) is the object of the innermost member_expression;
-; highlight it like the path's properties rather than a plain @variable.
-(member_expression object: (identifier) @property)
-
 ; Plain identifiers (channels/parameters/locals) — lowest priority catch-all.
 (identifier) @variable
