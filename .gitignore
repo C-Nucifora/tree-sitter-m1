@@ -1,9 +1,8 @@
 # Node
 node_modules/
 
-# Rust (library crate: lockfile not committed)
+# Rust (lockfile committed for reproducible CI, per current Cargo guidance)
 /target/
-Cargo.lock
 
 # tree-sitter / native build artifacts
 /build/
