@@ -61,31 +61,35 @@ naxID Bnk $(SEG) Vlim = 1;   // target is a single (identifier)
 ## The toolchain workspace
 
 The M1 toolchain lives in **six separate repositories** that depend on each other
-through Cargo **path** dependencies. They are not published to crates.io, so the
-Rust crates do not build from a standalone single-repo clone — clone the whole set
-as siblings under one parent directory:
+through **versioned git-tag** Cargo dependencies. They are not published to
+crates.io, but each crate still builds from a standalone single-repo clone —
+Cargo fetches its upstreams from their tagged releases. Cloning the whole set as
+siblings under one parent directory is handy for cross-repo work, not required to
+build:
 
 ```
 <parent>/
 ├── tree-sitter-m1/   # grammar (root of the dependency graph) — this repo
-├── m1-core/          # parse / CST / diagnostics; depends on ../tree-sitter-m1
-├── m1-lint/          # linter;          depends on ../m1-core
-├── m1-fmt/           # formatter;       depends on ../m1-core
-├── m1-typecheck/     # type checker;    depends on ../m1-core
+├── m1-core/          # parse / CST / diagnostics; depends on tree-sitter-m1
+├── m1-lint/          # linter;          depends on m1-core
+├── m1-fmt/           # formatter;       depends on m1-core
+├── m1-typecheck/     # type checker;    depends on m1-core
 └── m1-lsp/           # language server; depends on the four above
 ```
 
 `tree-sitter-m1` is the **root**: it has no sibling dependencies and builds on its
-own. All five Rust crates depend on it (directly or transitively) via
-`tree-sitter-m1 = { path = "../tree-sitter-m1" }`. In particular `m1-core`
-regenerates its `Kind` enum from this crate's `node-types.json`, so a grammar
-change here ripples downstream.
+own. All five Rust crates depend on it (directly or transitively) via a
+**versioned git-tag** Cargo dep, e.g.
+`tree-sitter-m1 = { git = "https://github.com/C-Nucifora/tree-sitter-m1.git", tag = "v0.3.0" }`.
+In particular `m1-core` regenerates its `Kind` enum from this crate's
+`node-types.json`, so a grammar change here ripples downstream.
 
-Because the repos are independent on GitHub, this coupling is **not visible
-there**: each repo's CI and PRs see only itself, and there is no cross-repo PR
-link. Build/merge ordering across the stack is a manual, local-workspace concern.
-The `m1-example` example project (used by some corpus tests) is an optional further
-sibling.
+Because every consumer pins this crate by tag, the coupling **is** visible on
+GitHub — each `Cargo.toml` names the tag it depends on, and Dependabot opens bump
+PRs as new tags ship. Cutting a new release here and bumping `tag = "vX.Y.Z"` in
+the consumers is what propagates a grammar change across the stack. The
+`m1-example` example project (used by some corpus tests) is an optional sibling
+checkout.
 
 ## Develop
 
@@ -102,7 +106,7 @@ Use as a Rust dependency:
 ```toml
 [dependencies]
 tree-sitter = "0.25"
-tree-sitter-m1 = { path = "../tree-sitter-m1" }
+tree-sitter-m1 = { git = "https://github.com/C-Nucifora/tree-sitter-m1.git", tag = "v0.3.0" }
 ```
 
 ```rust
