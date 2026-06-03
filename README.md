@@ -97,8 +97,8 @@ checkout.
 npm install                 # gets the tree-sitter CLI locally
 npx tree-sitter generate    # regenerate src/parser.c from grammar.js
 npx tree-sitter test        # run corpus tests
-# parse a script from the sibling m1-example corpus:
-npx tree-sitter parse "../m1-example/Scripts/Example.m1scr"
+# parse a real script from the sibling m1-example repo:
+npx tree-sitter parse "../m1-example/UQR-EV/01.00/Scripts/CAN.DBC Init.m1scr"
 ```
 
 Use as a Rust dependency:
