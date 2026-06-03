@@ -33,7 +33,9 @@ handled by the grammar/scanner:
   *first* word of a segment must start with a letter/`_`/`$`. *~20 files.*
 - **B. Bitwise operators** — added `>>` `<<` (shift) and `&` `^` `|` with C-like
   precedence. Corpus uses only `>>` (96×) and `&` (107×); siblings added as safe
-  standard operators. (`~` hits were all comment ASCII-art.)
+  standard operators. Unary `~` and the bitwise compound assignments
+  `%= &= |= ^= <<= >>=` were later added too (#31) — all confirmed in the M1 Build
+  Development Manual's operator tables even though the corpus does not exercise them.
 - **C. `static local`** — `optional("static")` on `local_declaration` (3×).
 - **D. Unsigned integer suffix** — `number` token accepts trailing `[uU]` (`0u`).
 - **E. `when`/`is` state-machine blocks** — `when_statement` + `is_clause` rules.
