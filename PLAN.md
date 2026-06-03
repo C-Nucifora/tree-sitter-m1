@@ -12,9 +12,9 @@ m1-lsp          → tower-lsp server tying the above together
 ```
 
 Dependency direction: `lint / fmt / typecheck / lsp → m1-core → tree-sitter-m1`.
-Test corpus: real scripts in `../m1-example/UQR-EV/01.00/Scripts/*.m1scr` and the
-`../m1-example/UQR-EV/01.00/Project.m1prj` symbol table. Language reference: the two
-PDFs in `../m1-example/M1-docs/`.
+Test corpus: real scripts in `../m1-example/Scripts/*.m1scr` and the
+`../m1-example/Project.m1prj` symbol table (override the location with
+`$M1_CORPUS_PATH`). Language reference: the two PDFs in `../m1-example/M1-docs/`.
 
 This repo is **Phase 1** and blocks everything else.
 
