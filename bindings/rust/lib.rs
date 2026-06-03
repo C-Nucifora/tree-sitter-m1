@@ -38,6 +38,30 @@ mod tests {
             .expect("Error loading M1 grammar");
     }
 
+    /// Every operator the M1 Build Development Manual lists must parse without an
+    /// ERROR/MISSING node — including unary `~` and the bitwise compound
+    /// assignments that were previously missing (#31).
+    #[test]
+    fn manual_operators_parse_without_errors() {
+        let mut parser = tree_sitter::Parser::new();
+        parser.set_language(&super::LANGUAGE.into()).unwrap();
+        for src in [
+            "x = ~y;\n",
+            "x %= 2;\n",
+            "x &= 2;\n",
+            "x |= 2;\n",
+            "x ^= 2;\n",
+            "x <<= 2;\n",
+            "x >>= 2;\n",
+        ] {
+            let tree = parser.parse(src, None).unwrap();
+            assert!(
+                !tree.root_node().has_error(),
+                "expected `{src:?}` to parse without errors"
+            );
+        }
+    }
+
     #[test]
     fn node_types_json_is_present() {
         assert!(super::NODE_TYPES_JSON.trim_start().starts_with('['));
