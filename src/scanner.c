@@ -66,10 +66,21 @@ static bool is_reserved(const char *word) {
   return false;
 }
 
+/* Upper bound on the characters scanned between `$(` and its closing `)`. A real
+ * interpolation names a compile-time segment/node and is tiny (the whole real
+ * corpus tops out at `$(NODE)`); 256 is ~37x that headroom. The bound exists so a
+ * never-closed `$(` fails fast instead of scanning to end-of-input: without it,
+ * tree-sitter re-runs the external scanner at successive positions during error
+ * recovery, so N unterminated `$(` each walk to EOF — O(n^2) parse time and a
+ * CPU-amplification DoS in every tool that parses (#35). */
+#define MAX_INTERP_SCAN 256
+
 /* Consume a `$(...)` compile-time interpolation, e.g. `$(SEG)`. These appear
  * both as standalone operands (`( $(SEG) - 1)`) and as units inside a name
  * segment (`naxID Bnk $(SEG) Vlim $(NODE)`). Returns true if a complete
- * interpolation was consumed. */
+ * interpolation was consumed. An interpolation never spans a line and is
+ * length-bounded, so an unterminated `$(` stops at the newline / scan cap and
+ * fails rather than running to EOF. */
 static bool try_read_interp(TSLexer *lexer) {
   if (lexer->lookahead != '$') {
     return false;
@@ -79,8 +90,12 @@ static bool try_read_interp(TSLexer *lexer) {
     return false;
   }
   lexer->advance(lexer, false);
-  while (lexer->lookahead != ')' && lexer->lookahead != 0) {
+  unsigned scanned = 0;
+  while (lexer->lookahead != ')' && lexer->lookahead != 0 &&
+         lexer->lookahead != '\n' && lexer->lookahead != '\r' &&
+         scanned < MAX_INTERP_SCAN) {
     lexer->advance(lexer, false);
+    scanned++;
   }
   if (lexer->lookahead != ')') {
     return false;

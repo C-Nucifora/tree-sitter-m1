@@ -106,4 +106,37 @@ mod tests {
             .expect("type field on type_annotation");
         assert_eq!(&src[ty.byte_range()], "Integer");
     }
+
+    /// Regression for #35: an unterminated `$(` interpolation must fail fast, not
+    /// scan to end-of-input. Before the scanner bound, tree-sitter re-ran the
+    /// external scanner at successive positions during error recovery and each of
+    /// N unterminated `$(` walked to EOF — O(n^2) parse time (n=50000 took ~20s).
+    /// The bound makes it linear; a generous wall-clock ceiling pins the fix
+    /// without being flaky on slow CI (the post-fix parse is a few ms).
+    #[test]
+    fn unterminated_interpolation_does_not_blow_up() {
+        let mut parser = tree_sitter::Parser::new();
+        parser.set_language(&super::LANGUAGE.into()).unwrap();
+        let src = format!("x = {};\n", "$(".repeat(50_000));
+        let start = std::time::Instant::now();
+        let tree = parser.parse(&src, None).unwrap();
+        let elapsed = start.elapsed();
+        // The `$(` never close, so it is a parse error — but it must error *fast*.
+        assert!(tree.root_node().has_error());
+        assert!(
+            elapsed < std::time::Duration::from_secs(5),
+            "unterminated `$(` x50000 took {elapsed:?}; expected <5s (O(n) parse). \
+             A regression to O(n^2) re-introduces the scanner DoS (#35)."
+        );
+    }
+
+    /// The interpolation scan bound must not reject legitimate interpolations,
+    /// which are short and single-line.
+    #[test]
+    fn well_formed_interpolation_still_parses() {
+        let mut parser = tree_sitter::Parser::new();
+        parser.set_language(&super::LANGUAGE.into()).unwrap();
+        let tree = parser.parse("x = $(SEG) + 1;\n", None).unwrap();
+        assert!(!tree.root_node().has_error());
+    }
 }
