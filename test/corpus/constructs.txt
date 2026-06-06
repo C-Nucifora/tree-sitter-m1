@@ -127,3 +127,29 @@ expand (SEG = 1 to 6)
         (binary_expression
           (identifier)
           (number))))))
+
+================================================================================
+bitwise NOT and compound assignments (manual operators, #31)
+================================================================================
+
+x = ~y;
+x %= 2;
+x &= 2;
+x <<= 1;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    (identifier)
+    (unary_expression
+      (identifier)))
+  (assignment_statement
+    (identifier)
+    (number))
+  (assignment_statement
+    (identifier)
+    (number))
+  (assignment_statement
+    (identifier)
+    (number)))

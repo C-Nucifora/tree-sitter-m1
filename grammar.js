@@ -110,7 +110,8 @@ module.exports = grammar({
         ";",
       ),
 
-    _assignment_operator: (_) => choice("=", "+=", "-=", "*=", "/="),
+    _assignment_operator: (_) =>
+      choice("=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="),
 
     expression_statement: ($) => seq($._expression, ";"),
 
@@ -192,7 +193,7 @@ module.exports = grammar({
     parenthesized_expression: ($) => seq("(", $._expression, ")"),
 
     unary_expression: ($) =>
-      prec(PREC.unary, seq(field("operator", choice("-", "not", "!")), $._expression)),
+      prec(PREC.unary, seq(field("operator", choice("-", "not", "!", "~")), $._expression)),
 
     ternary_expression: ($) =>
       prec.right(
