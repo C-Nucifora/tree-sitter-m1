@@ -5,12 +5,14 @@
 # PLAN.md ("Parse all m1-example scripts with zero ERROR nodes").
 #
 # Usage: scripts/check-corpus.sh [corpus_dir]
-#   corpus_dir defaults to ../m1-example/UQR-EV/01.00/Scripts
+#   corpus_dir defaults to $M1_CORPUS_PATH, else ../m1-example/UQR-EV/01.00/Scripts
+#   (the sibling-checkout default shared with m1-fmt/m1-lsp/m1-lint). Pass a dir or
+#   set M1_CORPUS_PATH to point elsewhere.
 
 set -u
 
 here="$(cd "$(dirname "$0")/.." && pwd)"
-corpus="${1:-$here/../m1-example/UQR-EV/01.00/Scripts}"
+corpus="${1:-${M1_CORPUS_PATH:-$here/../m1-example/UQR-EV/01.00/Scripts}}"
 tsc="npx --prefix \"$here\" tree-sitter"
 
 cd "$here" || exit 2

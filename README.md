@@ -116,6 +116,12 @@ parser.set_language(&tree_sitter_m1::LANGUAGE.into())?;
 
 ## Neovim setup
 
+> **Want the full M1 experience?** Use the unified
+> [nvim-m1](https://github.com/C-Nucifora/nvim-m1) plugin, which wires this
+> grammar together with `m1-lsp`, `m1-fmt`, and `m1-lint` behind a single
+> `setup` call. The spec below installs **only this grammar** — use it if you
+> want syntax highlighting / indent / folds without the rest of the toolchain.
+
 Register the parser config before installing so nvim-treesitter recognises the language (avoids the `skipping unsupported language: m1` warning):
 
 ```lua

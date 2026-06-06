@@ -20,7 +20,8 @@ Dependency order is `lint/fmt/typecheck/lsp → m1-core → tree-sitter-m1`. Pha
 ## Acceptance gate
 
 `tree-sitter-m1/scripts/check-corpus.sh` parses every `*.m1scr` under
-`m1-example/UQR-EV/01.00/Scripts` and fails if any ERROR/MISSING node appears.
+`m1-example/UQR-EV/01.00/Scripts` (override with `$M1_CORPUS_PATH`) and fails if
+any ERROR/MISSING node appears.
 Current: `parsed 80 scripts; 0 with ERROR/MISSING nodes`.
 
 ## Phase-1 root causes — all resolved (corpus-driven)
