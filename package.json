@@ -1,6 +1,6 @@
 {
   "name": "tree-sitter-m1",
-  "version": "0.2.0",
+  "version": "0.4.2",
   "private": true,
   "license": "GPL-3.0-or-later",
   "description": "Tree-sitter grammar for the MoTeC M1 script language (.m1scr)",
