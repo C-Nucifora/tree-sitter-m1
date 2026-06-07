@@ -21,8 +21,8 @@
  * segment token is produced by an external scanner (see src/scanner.c) that
  * greedily joins words but refuses to absorb reserved words.
  *
- * This is a first-pass grammar covering the constructs observed across the
- * m1-example corpus. Gaps are tracked in PLAN.md.
+ * This grammar covers the constructs observed across the m1-example corpus
+ * (Phase 1 complete per STATUS.md). Remaining gaps are tracked in PLAN.md.
  */
 
 const PREC = {

@@ -1,6 +1,6 @@
 # PLAN — tree-sitter-m1
 
-## Ecosystem (6 repos under `temp/`)
+## Ecosystem (6 sibling repos, laid out via vcstool)
 
 ```
 tree-sitter-m1  → grammar + queries + Rust parser crate         (foundation)

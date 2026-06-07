@@ -44,7 +44,12 @@ static bool is_word_char(int32_t c) {
   return is_word_start(c) || (c >= '0' && c <= '9');
 }
 
-/* Read a maximal word into buf (NUL-terminated, truncated to cap). */
+/* Read a maximal word into buf (NUL-terminated, truncated to cap). The fixed
+ * buffer is only used for the reserved-word strcmp in is_reserved(); the token's
+ * actual bytes come from the lexer's advance() byte ranges (via mark_end), not
+ * from buf, so truncating an over-long word here cannot corrupt the emitted
+ * token — at worst an absurdly long word fails to match a (short) keyword, which
+ * is correct since no reserved word approaches cap. */
 static void read_word(TSLexer *lexer, char *buf, unsigned cap) {
   unsigned n = 0;
   while (is_word_char(lexer->lookahead)) {
@@ -136,6 +141,10 @@ bool tree_sitter_m1_external_scanner_scan(void *payload, TSLexer *lexer,
 
   bool leads_with_interp = false;
 
+  /* IDENTIFIER vs INTERPOLATION disambiguation: a leading `$(...)` is tracked via
+   * leads_with_interp and only becomes INTERPOLATION if it gains no continuation
+   * unit (see the extended/result_symbol logic below); otherwise the first unit
+   * is a word and the token is always an IDENTIFIER. */
   /* First unit: a `$(...)` interpolation or a word. */
   if (lexer->lookahead == '$') {
     if (!try_read_interp(lexer)) {
