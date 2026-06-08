@@ -104,6 +104,42 @@ when (Active)
             (identifier)))))))
 
 ================================================================================
+when / is with multiple is clauses
+================================================================================
+
+when (Active)
+{
+	is (Off)
+	{
+		Active = Standby;
+	}
+	is (Standby or On)
+	{
+		Active = Off;
+	}
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (when_statement
+    (identifier)
+    (is_clause
+      (identifier)
+      (block
+        (assignment_statement
+          (identifier)
+          (identifier))))
+    (is_clause
+      (binary_expression
+        (identifier)
+        (identifier))
+      (block
+        (assignment_statement
+          (identifier)
+          (identifier))))))
+
+================================================================================
 expand loop with interpolation in names
 ================================================================================
 
