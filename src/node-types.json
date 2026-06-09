@@ -844,6 +844,10 @@
             "named": true
           },
           {
+            "type": "is_pattern_list",
+            "named": true
+          },
+          {
             "type": "member_expression",
             "named": true
           },
@@ -865,6 +869,34 @@
           },
           {
             "type": "unary_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "is_pattern_list",
+    "named": true,
+    "fields": {
+      "pattern": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "-",
+            "named": false
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "member_expression",
+            "named": true
+          },
+          {
+            "type": "number",
             "named": true
           }
         ]

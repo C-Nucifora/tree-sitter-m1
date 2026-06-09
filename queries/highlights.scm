@@ -111,5 +111,15 @@
 ; highlight it like the path's properties rather than a plain @variable.
 (member_expression object: (identifier) @property)
 
+; Reference keywords (manual pp.39–41): In/Out/Parent/Root/Library/This.
+; Captured as @variable.builtin regardless of position (head of a member chain
+; or bare use). These remain `identifier` nodes in the CST; the capture is
+; query-only. The explicit priority (default is 100) makes this win over the
+; same-node @property/@variable captures in every consumer, independent of
+; pattern order — editors disagree on whether earlier or later patterns win.
+((identifier) @variable.builtin
+ (#any-of? @variable.builtin "In" "Out" "Parent" "Root" "Library" "This")
+ (#set! priority 105))
+
 ; Plain identifiers (channels/parameters/locals) — lowest priority catch-all.
 (identifier) @variable

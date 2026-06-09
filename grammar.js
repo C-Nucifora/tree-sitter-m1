@@ -58,6 +58,14 @@ module.exports = grammar({
     // statement; both share the expression prefix until the operator/`;` is
     // seen, so the parser must explore both reductions.
     [$.assignment_statement, $.expression_statement],
+    // Inside `is (...)`, `A or B` is ambiguous between is_pattern_list and
+    // binary_expression until the `)` token disambiguates. GLR explores both;
+    // dynamic precedence on is_pattern_list wins.
+    [$.is_pattern_list, $.binary_expression],
+    // The leading pattern in an is_pattern_list is ambiguous with _expression:
+    // when the parser sees `identifier` after `is (`, it cannot yet tell
+    // whether it is building a single _expression or the first _is_pattern.
+    [$._is_pattern, $._expression],
   ],
 
   rules: {
@@ -142,7 +150,39 @@ module.exports = grammar({
       ),
 
     is_clause: ($) =>
-      seq("is", "(", field("state", $._expression), ")", field("body", $.block)),
+      seq(
+        "is",
+        "(",
+        field("state", choice($.is_pattern_list, $._expression)),
+        ")",
+        field("body", $.block),
+      ),
+
+    // Compile-time pattern list inside `is (...)`: two or more enum-value
+    // patterns separated by `or` (manual p.33). A single pattern keeps the
+    // plain _expression shape to avoid downstream churn.
+    //
+    // Allowed patterns: identifier, member_expression (enum member paths),
+    // number, or unary-minus number — matching what the real corpora use.
+    // `prec.dynamic(1, ...)` makes the parser prefer this node over the
+    // binary_expression alternative when inside an is-clause.
+    is_pattern_list: ($) =>
+      prec.dynamic(
+        1,
+        seq(
+          field("pattern", $._is_pattern),
+          repeat1(seq("or", field("pattern", $._is_pattern))),
+        ),
+      ),
+
+    // A single matchable value inside an is-pattern list.
+    _is_pattern: ($) =>
+      choice(
+        $.member_expression,
+        $.identifier,
+        $.number,
+        seq("-", $.number),
+      ),
 
     // Compile-time loop: `expand (VAR = <start> to <end>) { ... }`. The body is
     // text-substituted for each value; $(VAR) interpolations live in the body.
