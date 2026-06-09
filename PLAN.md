@@ -47,14 +47,15 @@ Parse `.m1scr` into a concrete syntax tree. No semantics — that lives in
       (`scripts/check-corpus.sh` — currently `80 parsed, 0 with errors`.)
 - [x] Write corpus tests from verified output (don't hand-write trees).
       (`test/corpus/constructs.txt`, generated via `tree-sitter test --update`.)
-- [~] Confirm the reserved-word set against the M1 Development Manual. Added from
+- [x] Confirm the reserved-word set against the M1 Development Manual. Added from
       the corpus: `static`, `when`, `is`, `expand`, `to`, plus bitwise/shift
-      operators (`>> << & ^ |`) and the `u` integer suffix. Still TODO: confirm
-      against the manual whether `xor`/`mod` word-operators or function /
-      scheduled-function declaration keywords exist (none appear in the corpus).
-- [ ] Function/scheduled-function definitions: the corpus is mostly statement
-      bodies, but the language has function objects with typed inputs/outputs —
-      confirm whether they ever appear in `.m1scr` text and grammar them if so.
+      operators (`>> << & ^ |`) and the `u` integer suffix. **`xor`/`mod` are
+      ABSENT from the manual's operator tables (pp.36–38)** — only `eq`, `neq`,
+      `and`, `or`, `not` exist as word operators. No grammar change needed.
+- [x] Function/scheduled-function definitions: **functions are declared in
+      `.m1prj`, never in `.m1scr`** (confirmed against manual and both real
+      corpora — no function-declaration syntax appears in any `.m1scr` file).
+      No grammar addition needed.
 - [x] Validate the scanner against pathological names (covered by
       `test/corpus/scanner_edges.txt`) and standalone `$(VAR)` (now its own
       `interpolation` node; `test/corpus/interpolation.txt`).
@@ -65,7 +66,16 @@ Parse `.m1scr` into a concrete syntax tree. No semantics — that lives in
 
 - [x] `locals.scm` shipped (CST-only scopes + local/expand definitions);
       channel/param resolution still pending `m1-core` scopes.
-- [ ] Verify indents.scm against the 4-space / brace style in CONTRIBUTING.md.
+- [x] Verify indents.scm against the tab / Allman-brace style mandated by the M1
+      Development Manual (pp.26–27). Analysis: `@indent.begin` fires on
+      `(block)`, `(when_statement)`, `(argument_list)`, and
+      `(parenthesized_expression)` — all correct for Allman style (contents
+      inside `{}` are indented; the Allman opening `{` on its own line is
+      handled by the `@indent.branch` / `@indent.end` pairing on `}`). The new
+      `is_pattern_list` lives inside `is ( ... )` which is already covered by
+      the `(parenthesized_expression)` or is single-line; no indent/fold query
+      change needed. `folds.scm` correctly folds `(block)` and
+      `(when_statement)`. No defects found.
 
 ## Open questions for the owner
 
