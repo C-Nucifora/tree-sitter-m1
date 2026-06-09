@@ -104,7 +104,7 @@ when (Active)
             (identifier)))))))
 
 ================================================================================
-when / is with multiple is clauses
+when / is with multiple is clauses — two-pattern list
 ================================================================================
 
 when (Active)
@@ -131,13 +131,61 @@ when (Active)
           (identifier)
           (identifier))))
     (is_clause
-      (binary_expression
+      (is_pattern_list
         (identifier)
         (identifier))
       (block
         (assignment_statement
           (identifier)
           (identifier))))))
+
+================================================================================
+when / is with three-pattern list and member paths
+================================================================================
+
+when (Mode)
+{
+	is (State.A or State.B or State.C)
+	{
+		x = 1;
+	}
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (when_statement
+    (identifier)
+    (is_clause
+      (is_pattern_list
+        (member_expression
+          (identifier)
+          (identifier))
+        (member_expression
+          (identifier)
+          (identifier))
+        (member_expression
+          (identifier)
+          (identifier)))
+      (block
+        (assignment_statement
+          (identifier)
+          (number))))))
+
+================================================================================
+or outside is-clause stays binary_expression
+================================================================================
+
+x = A or B;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    (identifier)
+    (binary_expression
+      (identifier)
+      (identifier))))
 
 ================================================================================
 expand loop with interpolation in names
