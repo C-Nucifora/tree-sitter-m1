@@ -80,7 +80,7 @@ build:
 `tree-sitter-m1` is the **root**: it has no sibling dependencies and builds on its
 own. All five Rust crates depend on it (directly or transitively) via a
 **versioned git-tag** Cargo dep, e.g.
-`tree-sitter-m1 = { git = "https://github.com/C-Nucifora/tree-sitter-m1.git", tag = "v0.3.0" }`.
+`tree-sitter-m1 = { git = "https://github.com/C-Nucifora/tree-sitter-m1.git", tag = "v0.5.0"  # pin the latest release }`.
 In particular `m1-core` regenerates its `Kind` enum from this crate's
 `node-types.json`, so a grammar change here ripples downstream.
 
@@ -97,6 +97,8 @@ checkout.
 npm install                 # gets the tree-sitter CLI locally
 npx tree-sitter generate    # regenerate src/parser.c from grammar.js
 npx tree-sitter test        # run corpus tests
+# acceptance gate: parse every real corpus script, fail on any ERROR/MISSING
+scripts/check-corpus.sh
 # parse a real script from the sibling m1-example repo:
 npx tree-sitter parse "../m1-example/UQR-EV/01.00/Scripts/CAN.DBC Init.m1scr"
 ```
@@ -106,7 +108,7 @@ Use as a Rust dependency:
 ```toml
 [dependencies]
 tree-sitter = "0.25"
-tree-sitter-m1 = { git = "https://github.com/C-Nucifora/tree-sitter-m1.git", tag = "v0.3.0" }
+tree-sitter-m1 = { git = "https://github.com/C-Nucifora/tree-sitter-m1.git", tag = "v0.5.0"  # pin the latest release }
 ```
 
 ```rust
@@ -155,8 +157,14 @@ Register the parser config before installing so nvim-treesitter recognises the l
 
 ## Status
 
-First-pass grammar covering the constructs seen across the m1-example corpus. Known
-gaps and next steps are in [`PLAN.md`](PLAN.md).
+Stable and complete against both real corpora and the M1 Build Development
+Manual's operator/construct tables: every script in the EV-M1 and AV-M1
+corpora parses with zero `ERROR`/`MISSING` nodes (`scripts/check-corpus.sh` is
+the CI gate). This grammar is the foundation of the wider M1 toolchain —
+`m1-core`, `m1-fmt`, `m1-lint`, `m1-typecheck`, `m1-lsp`, editor plugins —
+laid out as sibling repos via the
+[`m1-tools`](https://github.com/C-Nucifora/m1-tools) vcstool manifest, which is
+the up-to-date map of the ecosystem.
 
 ## License
 

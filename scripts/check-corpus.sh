@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
 # check-corpus.sh — parse every real .m1scr in the m1-example corpus and fail if any
-# produces an ERROR or MISSING node. This is the Phase-1 acceptance gate from
-# PLAN.md ("Parse all m1-example scripts with zero ERROR nodes").
+# produces an ERROR or MISSING node — the grammar's corpus acceptance gate
+# ("parse all m1-example scripts with zero ERROR nodes").
 #
 # Usage: scripts/check-corpus.sh [corpus_dir]
 #   corpus_dir defaults to $M1_CORPUS_PATH, else ../m1-example/UQR-EV/01.00/Scripts
