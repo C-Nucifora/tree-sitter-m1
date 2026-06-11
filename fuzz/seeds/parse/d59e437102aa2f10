@@ -1,0 +1,7 @@
+when (Active)
+{
+	is (Off)
+	{
+		Active = Wexlar Bonquil Mosko.Vor;
+	}
+}

@@ -1,0 +1,4 @@
+expand (SEG = 1 to 6)
+{
+	Klumph $(SEG).Glonk 4 = $(SEG) + 1;
+}

@@ -1,0 +1,1 @@
+local <Boolean> SystemReady = ((Mosko.Trilby Glonk >> 8) & 0x01) eq 0x01;

@@ -1,0 +1,31 @@
+[package]
+name = "tree-sitter-m1-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+arbitrary = { version = "1", features = ["derive"] }
+tree-sitter = "0.26"
+
+[dependencies.tree-sitter-m1]
+path = ".."
+
+[[bin]]
+name = "parse"
+path = "fuzz_targets/parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "parse_edit"
+path = "fuzz_targets/parse_edit.rs"
+test = false
+doc = false
+bench = false

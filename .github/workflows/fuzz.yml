@@ -1,0 +1,59 @@
+name: Fuzz
+
+# Short libFuzzer smoke on the parser + external scanner (#46): 60s per target
+# under AddressSanitizer, seeded from the corpus tests. Runs only when the
+# input surface (grammar, scanner, generated parser) or the harness changes;
+# a weekly scheduled run covers drift in between.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "grammar.js"
+      - "src/scanner.c"
+      - "src/parser.c"
+      - "fuzz/**"
+      - ".github/workflows/fuzz.yml"
+  schedule:
+    - cron: "17 4 * * 1" # Mondays 04:17 UTC
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  # Instrument the cc-built C parser/scanner too — without this only the thin
+  # Rust shim is sanitized/covered and the fuzz run is blind to the real
+  # surface. clang's fuzzer-no-link adds SanitizerCoverage so libFuzzer is
+  # genuinely coverage-guided through scanner.c.
+  CC: clang
+  CXX: clang++
+  CFLAGS: -fsanitize=address,fuzzer-no-link
+  CXXFLAGS: -fsanitize=address,fuzzer-no-link
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    name: Fuzz smoke (ASan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fuzz
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+      # The committed seeds live in fuzz/seeds/ (kept pristine); the first,
+      # gitignored corpus dir receives anything libFuzzer discovers.
+      - name: Fuzz parse (arbitrary bytes through parser + scanner)
+        run: |
+          mkdir -p fuzz/corpus/parse
+          cargo +nightly fuzz run parse fuzz/corpus/parse fuzz/seeds/parse -- -max_total_time=60
+      - name: Fuzz parse_edit (incremental == fresh parse)
+        run: cargo +nightly fuzz run parse_edit -- -max_total_time=60
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-artifacts
+          path: fuzz/artifacts/

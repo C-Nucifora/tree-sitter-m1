@@ -1,0 +1,1 @@
+static local <Integer> i = -1;
