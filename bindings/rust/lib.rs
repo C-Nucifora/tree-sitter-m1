@@ -24,6 +24,9 @@ pub const FOLDS_QUERY: &str = include_str!("../../queries/folds.scm");
 pub const LOCALS_QUERY: &str = include_str!("../../queries/locals.scm");
 /// Language-injection query source (`queries/injections.scm`).
 pub const INJECTIONS_QUERY: &str = include_str!("../../queries/injections.scm");
+/// Text-objects query source (`queries/textobjects.scm`), following the
+/// nvim-treesitter-textobjects capture conventions.
+pub const TEXTOBJECTS_QUERY: &str = include_str!("../../queries/textobjects.scm");
 /// The grammar's generated node-types description (`src/node-types.json`),
 /// consumed by downstream codegen (e.g. m1-core's `Kind` generator).
 pub const NODE_TYPES_JSON: &str = include_str!("../../src/node-types.json");
@@ -76,6 +79,7 @@ mod tests {
             ("indents", super::INDENTS_QUERY),
             ("folds", super::FOLDS_QUERY),
             ("locals", super::LOCALS_QUERY),
+            ("textobjects", super::TEXTOBJECTS_QUERY),
         ] {
             tree_sitter::Query::new(&language, src)
                 .unwrap_or_else(|e| panic!("query {name} failed to compile: {e}"));
