@@ -5,11 +5,13 @@
       "camelcase": "M1",
       "scope": "source.m1",
       "path": ".",
-      "file-types": ["m1scr"]
+      "file-types": [
+        "m1scr"
+      ]
     }
   ],
   "metadata": {
-    "version": "0.5.0",
+    "version": "0.6.0",
     "description": "Tree-sitter grammar for the MoTeC M1 script language (.m1scr)"
   },
   "bindings": {
