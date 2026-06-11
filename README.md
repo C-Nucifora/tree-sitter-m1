@@ -155,6 +155,21 @@ Register the parser config before installing so nvim-treesitter recognises the l
 }
 ```
 
+## Fuzzing
+
+A libFuzzer harness (`fuzz/`) drives arbitrary bytes through the parser and
+external scanner (`parse`) and asserts incremental parses match fresh parses
+after random edits (`parse_edit`), both under AddressSanitizer. CI runs a
+60-second smoke per target on changes to `grammar.js` / `src/scanner.c` /
+`src/parser.c` (plus weekly). Locally:
+
+```bash
+cargo install cargo-fuzz
+mkdir -p fuzz/corpus/parse
+CC=clang CFLAGS=-fsanitize=address,fuzzer-no-link \
+  cargo +nightly fuzz run parse fuzz/corpus/parse fuzz/seeds/parse
+```
+
 ## Status
 
 Stable and complete against both real corpora and the M1 Build Development

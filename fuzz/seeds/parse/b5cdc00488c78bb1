@@ -1,0 +1,7 @@
+when (Mode)
+{
+	is (State.A or State.B or State.C)
+	{
+		x = 1;
+	}
+}

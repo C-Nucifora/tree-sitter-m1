@@ -1,0 +1,11 @@
+when (Active)
+{
+	is (Off)
+	{
+		Active = Standby;
+	}
+	is (Standby or On)
+	{
+		Active = Off;
+	}
+}
