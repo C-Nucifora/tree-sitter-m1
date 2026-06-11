@@ -2,6 +2,7 @@
 name = "tree-sitter-m1"
 version = "0.6.0"
 edition = "2024"
+rust-version = "1.88"
 license = "GPL-3.0-or-later"
 description = "M1 (MoTeC M1 script) grammar for tree-sitter"
 publish = false

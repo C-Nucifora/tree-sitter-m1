@@ -74,11 +74,37 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
 
-  corpus:
-    name: Corpus
+  # The real-corpus gate (scripts/check-corpus.sh) is local-only: the EV-M1
+  # corpus is not available on GitHub runners, and the job that used to run it
+  # here passed vacuously on zero files (#51). The script now refuses to pass
+  # with no corpus; run it locally before a grammar release.
+
+  grammar:
+    name: Grammar
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # The committed generated artifacts (src/parser.c, node-types.json,
+      # grammar.json) are the deliverable; they must match grammar.js +
+      # tree-sitter.json exactly (#52). Mirrors m1-core's kind_rs_is_fresh.
+      - name: Generated parser is fresh
+        run: |
+          npx tree-sitter generate
+          git diff --exit-code -- src/
+      # The grammar's own unit corpus (test/corpus/).
+      - run: npx tree-sitter test
+
+  msrv:
+    name: MSRV
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      # Keep in sync with `rust-version` in Cargo.toml (m1-tools#23).
+      - uses: dtolnay/rust-toolchain@1.88
       - uses: Swatinem/rust-cache@v2
-      - run: bash scripts/check-corpus.sh
+      - run: cargo check --all-targets
