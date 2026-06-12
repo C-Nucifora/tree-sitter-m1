@@ -287,7 +287,12 @@ module.exports = grammar({
 
     boolean: (_) => choice("true", "false"),
 
-    string: (_) => token(seq('"', /[^"]*/, '"')),
+    // M1 strings are simple display text (manual p.24: locals-only, shown in
+    // M1 Tune info windows). Neither the manual nor the real corpora show any
+    // escape syntax — a backslash is a literal character, and there is no \"
+    // escaped quote. Newlines are excluded so an unterminated quote errors on
+    // its own line instead of swallowing the rest of the file.
+    string: (_) => token(seq('"', /[^"\n]*/, '"')),
 
     line_comment: (_) => token(seq("//", /[^\n]*/)),
 

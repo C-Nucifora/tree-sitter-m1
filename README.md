@@ -9,9 +9,10 @@ This is the root of the M1 editor-tooling stack
 ecosystem). It produces the parser the Rust tools consume — `m1-core`
 regenerates its node-kind enums from this grammar's `node-types.json`, so a
 change here ripples through the whole toolchain — plus highlight / indent /
-fold queries for editors. Every script in the two real-world corpora parses
-with zero `ERROR`/`MISSING` nodes; that gate (`scripts/check-corpus.sh`) runs
-in CI.
+fold queries for editors. The committed `test/corpus` suite runs in CI; the
+real-world corpus gate (`scripts/check-corpus.sh` — every script in the two
+real corpora parses with zero `ERROR`/`MISSING` nodes) is run locally before
+a grammar release, since those corpora are not available on public runners.
 
 ## The hard part: identifiers contain spaces
 
@@ -42,7 +43,7 @@ preserving "one identifier = one path segment".
 npm install                 # gets the tree-sitter CLI locally
 npx tree-sitter generate    # regenerate src/parser.c from grammar.js
 npx tree-sitter test        # corpus tests
-scripts/check-corpus.sh     # parse every real-corpus script; fail on ERROR/MISSING
+scripts/check-corpus.sh DIR # parse a real corpus dir; fail on ERROR/MISSING
 ```
 
 `src/parser.c` is generated but **committed**, so the Rust crate builds

@@ -4,16 +4,19 @@
 # produces an ERROR or MISSING node — the grammar's corpus acceptance gate
 # ("parse all m1-example scripts with zero ERROR nodes").
 #
-# Usage: scripts/check-corpus.sh [corpus_dir]
-#   corpus_dir defaults to $M1_CORPUS_PATH, else ../m1-example/UQR-EV/01.00/Scripts
-#   (the sibling-checkout default shared with m1-fmt/m1-lsp/m1-lint). Pass a dir or
-#   set M1_CORPUS_PATH to point elsewhere.
+# Usage: scripts/check-corpus.sh <corpus_dir>
+#   corpus_dir may also be supplied via $M1_CORPUS_PATH. There is no default:
+#   real-world corpora live outside this repo, so point this at your own
+#   directory of .m1scr scripts.
 
 set -u
 
 here="$(cd "$(dirname "$0")/.." && pwd)"
-corpus="${1:-${M1_CORPUS_PATH:-$here/../m1-example/UQR-EV/01.00/Scripts}}"
-tsc="npx --prefix \"$here\" tree-sitter"
+corpus="${1:-${M1_CORPUS_PATH:-}}"
+if [ -z "$corpus" ]; then
+  echo "usage: scripts/check-corpus.sh <corpus_dir>   (or set M1_CORPUS_PATH)" >&2
+  exit 2
+fi
 
 cd "$here" || exit 2
 
