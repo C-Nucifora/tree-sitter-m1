@@ -4,11 +4,14 @@ A [tree-sitter](https://tree-sitter.github.io/) grammar for the **MoTeC M1
 script language** (`.m1scr`) — the C#-like language used inside MoTeC M1 Build
 to program M1-series ECUs (e.g. the M150).
 
-This is the **foundation** of the M1 editor-tooling stack. It produces:
-
-- a parser the Rust tools consume (`m1-core`, `m1-lint`, `m1-fmt`,
-  `m1-typecheck`, `m1-lsp`), and
-- highlight / indent / fold queries for Neovim.
+This is the root of the M1 editor-tooling stack
+([m1-tools](https://github.com/C-Nucifora/m1-tools) is the map of the
+ecosystem). It produces the parser the Rust tools consume — `m1-core`
+regenerates its node-kind enums from this grammar's `node-types.json`, so a
+change here ripples through the whole toolchain — plus highlight / indent /
+fold queries for editors. Every script in the two real-world corpora parses
+with zero `ERROR`/`MISSING` nodes; that gate (`scripts/check-corpus.sh`) runs
+in CI.
 
 ## The hard part: identifiers contain spaces
 
@@ -19,96 +22,42 @@ Brenloft.Quassor.Vund Klee.Mosko.Trilby Glonk = CanComms.GetUnsignedInteger(h, 4
 Pellow.KVB Bonquil eq Wexlar Bonquil Mosko.Vor
 ```
 
-> **Note:** All example identifiers in this repo (here, in the grammar/scanner
-> comments, and in the corpus tests) are synthetic placeholders. The grammar and
-> tests were anonymised; the names are not drawn from any real project.
-
-A regex token can't express "a run of words, but stop before the keyword `eq`".
-So the `identifier` token is produced by an **external scanner**
+A regex token can't express "a run of words, but stop before the keyword
+`eq`". So the `identifier` token is produced by an **external scanner**
 ([`src/scanner.c`](src/scanner.c)) that joins `word SPACE word` greedily while
-refusing to absorb reserved words. The reserved set there must stay in sync with
-the keyword strings in [`grammar.js`](grammar.js).
+refusing to absorb reserved words. The reserved set there must stay in sync
+with the keyword strings in [`grammar.js`](grammar.js).
 
-## Compile-time interpolation: `$(VAR)`
+Compile-time interpolation is the other subtlety: a standalone `$(VAR)`
+operand parses as its own `interpolation` node, but when `$(VAR)` appears
+inside a multi-word name it stays part of the `identifier` segment —
+preserving "one identifier = one path segment".
 
-A standalone `$(VAR)` used as an operand parses as its own `interpolation`
-node:
-
-```
-x = $(SEG) + 1;   // value is (binary_expression (interpolation) (number))
-```
-
-When `$(VAR)` instead leads a multi-word name it stays inside the
-`identifier` segment, preserving "one identifier = one path segment":
-
-```
-naxID Bnk $(SEG) Vlim = 1;   // target is a single (identifier)
-```
-
-(Example names are synthetic placeholders, not from any real project.)
-
-## Layout
-
-| Path | Purpose |
-|---|---|
-| `grammar.js` | Grammar definition |
-| `src/scanner.c` | External scanner (space-joined identifiers) |
-| `src/parser.c` | Generated parser (committed so the Rust crate builds without the CLI) |
-| `queries/*.scm` | highlight / indent / fold / injection queries |
-| `bindings/rust/` | Rust crate exposing `LANGUAGE` + query strings |
-| `test/corpus/` | tree-sitter corpus tests covering the grammar's constructs |
-
-## The toolchain workspace
-
-The M1 toolchain lives in **six separate repositories** that depend on each other
-through **versioned git-tag** Cargo dependencies. They are not published to
-crates.io, but each crate still builds from a standalone single-repo clone —
-Cargo fetches its upstreams from their tagged releases. Cloning the whole set as
-siblings under one parent directory is handy for cross-repo work, not required to
-build:
-
-```
-<parent>/
-├── tree-sitter-m1/   # grammar (root of the dependency graph) — this repo
-├── m1-core/          # parse / CST / diagnostics; depends on tree-sitter-m1
-├── m1-lint/          # linter;          depends on m1-core
-├── m1-fmt/           # formatter;       depends on m1-core
-├── m1-typecheck/     # type checker;    depends on m1-core
-└── m1-lsp/           # language server; depends on the four above
-```
-
-`tree-sitter-m1` is the **root**: it has no sibling dependencies and builds on its
-own. All five Rust crates depend on it (directly or transitively) via a
-**versioned git-tag** Cargo dep, e.g.
-`tree-sitter-m1 = { git = "https://github.com/C-Nucifora/tree-sitter-m1.git", tag = "v0.5.0"  # pin the latest release }`.
-In particular `m1-core` regenerates its `Kind` enum from this crate's
-`node-types.json`, so a grammar change here ripples downstream.
-
-Because every consumer pins this crate by tag, the coupling **is** visible on
-GitHub — each `Cargo.toml` names the tag it depends on, and Dependabot opens bump
-PRs as new tags ship. Cutting a new release here and bumping `tag = "vX.Y.Z"` in
-the consumers is what propagates a grammar change across the stack. The
-`m1-example` example project (used by some corpus tests) is an optional sibling
-checkout.
+> All example identifiers in this repo (grammar comments, corpus tests, docs)
+> are synthetic placeholders, not drawn from any real project.
 
 ## Develop
 
-```bash
+```sh
 npm install                 # gets the tree-sitter CLI locally
 npx tree-sitter generate    # regenerate src/parser.c from grammar.js
-npx tree-sitter test        # run corpus tests
-# acceptance gate: parse every real corpus script, fail on any ERROR/MISSING
-scripts/check-corpus.sh
-# parse a real script from the sibling m1-example repo:
-npx tree-sitter parse "../m1-example/UQR-EV/01.00/Scripts/CAN.DBC Init.m1scr"
+npx tree-sitter test        # corpus tests
+scripts/check-corpus.sh     # parse every real-corpus script; fail on ERROR/MISSING
 ```
 
-Use as a Rust dependency:
+`src/parser.c` is generated but **committed**, so the Rust crate builds
+without the tree-sitter CLI — regenerate and commit it together with any
+`grammar.js` change.
+
+## Use as a Rust dependency
+
+Consumed via a versioned git tag (the whole toolchain uses this scheme). Pin
+the [latest release](https://github.com/C-Nucifora/tree-sitter-m1/releases):
 
 ```toml
 [dependencies]
 tree-sitter = "0.25"
-tree-sitter-m1 = { git = "https://github.com/C-Nucifora/tree-sitter-m1.git", tag = "v0.5.0"  # pin the latest release }
+tree-sitter-m1 = { git = "https://github.com/C-Nucifora/tree-sitter-m1.git", tag = "vX.Y.Z" }
 ```
 
 ```rust
@@ -116,76 +65,29 @@ let mut parser = tree_sitter::Parser::new();
 parser.set_language(&tree_sitter_m1::LANGUAGE.into())?;
 ```
 
-## Neovim setup
+(Most Rust users want [m1-core](https://github.com/C-Nucifora/m1-core)'s
+typed API instead of the raw grammar.)
 
-> **Want the full M1 experience?** Use the unified
-> [nvim-m1](https://github.com/C-Nucifora/nvim-m1) plugin, which wires this
-> grammar together with `m1-lsp`, `m1-fmt`, and `m1-lint` behind a single
-> `setup` call. The spec below installs **only this grammar** — use it if you
-> want syntax highlighting / indent / folds without the rest of the toolchain.
+## Neovim
 
-Register the parser config before installing so nvim-treesitter recognises the language (avoids the `skipping unsupported language: m1` warning):
-
-```lua
-{
-    "C-Nucifora/tree-sitter-m1",
-    dependencies = { "nvim-treesitter/nvim-treesitter" },
-    config = function()
-        -- Map the `.m1scr` filetype to the `m1` tree-sitter language.
-        vim.filetype.add({ extension = { m1scr = "m1scr" } })
-        vim.treesitter.language.register("m1", "m1scr")
-
-        -- Register the parser. The nvim-treesitter rewrite returns the config
-        -- table directly; legacy builds expose get_parser_configs().
-        local parsers = require("nvim-treesitter.parsers")
-        local parser_config = type(parsers.get_parser_configs) == "function"
-                and parsers.get_parser_configs()
-            or parsers
-        parser_config.m1 = {
-            install_info = {
-                url = "https://github.com/C-Nucifora/tree-sitter-m1",
-                -- The grammar has an external scanner, so scanner.c is required.
-                files = { "src/parser.c", "src/scanner.c" },
-                branch = "main",
-            },
-            filetype = "m1scr",
-        }
-        vim.cmd("TSInstall! m1")
-    end,
-}
-```
+Use the unified [nvim-m1](https://github.com/C-Nucifora/nvim-m1) plugin,
+which wires this grammar together with the language server, formatter, and
+linter behind a single `setup` call. To install **only the grammar**
+(highlighting/indent/folds without the rest of the toolchain), register the
+parser with nvim-treesitter pointing at this repo with
+`files = { "src/parser.c", "src/scanner.c" }` — the external scanner is
+required.
 
 ## Fuzzing
 
 A libFuzzer harness (`fuzz/`) drives arbitrary bytes through the parser and
-external scanner (`parse`) and asserts incremental parses match fresh parses
-after random edits (`parse_edit`), both under AddressSanitizer. CI runs a
-60-second smoke per target on changes to `grammar.js` / `src/scanner.c` /
-`src/parser.c` (plus weekly). Locally:
-
-```bash
-cargo install cargo-fuzz
-mkdir -p fuzz/corpus/parse
-CC=clang CFLAGS=-fsanitize=address,fuzzer-no-link \
-  cargo +nightly fuzz run parse fuzz/corpus/parse fuzz/seeds/parse
-```
-
-## Status
-
-Stable and complete against both real corpora and the M1 Build Development
-Manual's operator/construct tables: every script in the EV-M1 and AV-M1
-corpora parses with zero `ERROR`/`MISSING` nodes (`scripts/check-corpus.sh` is
-the CI gate). This grammar is the foundation of the wider M1 toolchain —
-`m1-core`, `m1-fmt`, `m1-lint`, `m1-typecheck`, `m1-lsp`, editor plugins —
-laid out as sibling repos via the
-[`m1-tools`](https://github.com/C-Nucifora/m1-tools) vcstool manifest, which is
-the up-to-date map of the ecosystem.
+scanner, and asserts incremental parses match fresh parses after random
+edits, under AddressSanitizer. CI runs a smoke pass on grammar/scanner
+changes plus a weekly run.
 
 ## License
 
-Licensed under the GNU General Public License v3.0 or later (GPL-3.0-or-later) — see [LICENSE](LICENSE).
-
-Copyright (C) 2026 The M1 Tools authors.
+GPL-3.0-or-later — see [LICENSE](LICENSE).
 
 ## Trademark
 
