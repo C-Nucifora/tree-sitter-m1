@@ -240,6 +240,45 @@ expand (SEG = 1 to 6)
           (number))))))
 
 ================================================================================
+if / else if / else chain
+================================================================================
+
+if (x)
+{
+	y = 1;
+}
+else if (z)
+{
+	y = 2;
+}
+else
+{
+	y = 3;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (if_statement
+    condition: (identifier)
+    consequence: (block
+      (assignment_statement
+        target: (identifier)
+        value: (number)))
+    (else_clause
+      (if_statement
+        condition: (identifier)
+        consequence: (block
+          (assignment_statement
+            target: (identifier)
+            value: (number)))
+        (else_clause
+          (block
+            (assignment_statement
+              target: (identifier)
+              value: (number))))))))
+
+================================================================================
 bitwise NOT and compound assignments (manual operators, #31)
 ================================================================================
 
