@@ -66,6 +66,10 @@ module.exports = grammar({
     // when the parser sees `identifier` after `is (`, it cannot yet tell
     // whether it is building a single _expression or the first _is_pattern.
     [$._is_pattern, $._expression],
+    // Same ambiguity for the negative-number pattern: after `is ( -`, the `-`
+    // may begin a `negative_number` pattern or a unary `_expression`. GLR
+    // explores both; dynamic precedence on is_pattern_list wins.
+    [$.negative_number, $._expression],
   ],
 
   rules: {
@@ -181,8 +185,14 @@ module.exports = grammar({
         $.member_expression,
         $.identifier,
         $.number,
-        seq("-", $.number),
+        $.negative_number,
       ),
+
+    // A negative enumerator value (manual p.24: `-1 = Error`). Wrapping the
+    // `-` and the number in one named node keeps a pattern as exactly one
+    // named child carrying the full text including the sign, instead of a
+    // detached anonymous `-` token next to an unsigned `number`.
+    negative_number: ($) => seq("-", $.number),
 
     // Compile-time loop: `expand (VAR = <start> to <end>) { ... }`. The body is
     // text-substituted for each value; $(VAR) interpolations live in the body.
