@@ -303,3 +303,40 @@ x <<= 1;
   (assignment_statement
     (identifier)
     (number)))
+
+================================================================================
+remaining compound-assignment operators (+=, -=, *=, /=, |=, ^=, >>=)
+================================================================================
+
+x += 1;
+x -= 1;
+x *= 2;
+x /= 2;
+x |= 2;
+x ^= 2;
+x >>= 1;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    (identifier)
+    (number))
+  (assignment_statement
+    (identifier)
+    (number))
+  (assignment_statement
+    (identifier)
+    (number))
+  (assignment_statement
+    (identifier)
+    (number))
+  (assignment_statement
+    (identifier)
+    (number))
+  (assignment_statement
+    (identifier)
+    (number))
+  (assignment_statement
+    (identifier)
+    (number)))
