@@ -340,3 +340,126 @@ x >>= 1;
   (assignment_statement
     (identifier)
     (number)))
+
+================================================================================
+if statement without else
+================================================================================
+
+if (x)
+{
+	y = 1;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (if_statement
+    condition: (identifier)
+    consequence: (block
+      (assignment_statement
+        target: (identifier)
+        value: (number)))))
+
+================================================================================
+ternary expression — simple
+================================================================================
+
+x = a ? b : c;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    target: (identifier)
+    value: (ternary_expression
+      condition: (identifier)
+      consequence: (identifier)
+      alternative: (identifier))))
+
+================================================================================
+ternary expression — nested consequence (right-associative)
+================================================================================
+
+x = a ? b ? c : d : e;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    target: (identifier)
+    value: (ternary_expression
+      condition: (identifier)
+      consequence: (ternary_expression
+        condition: (identifier)
+        consequence: (identifier)
+        alternative: (identifier))
+      alternative: (identifier))))
+
+================================================================================
+ternary expression — method calls in all three positions
+================================================================================
+
+x = Foo.Bar() ? Baz.Qux() : Quux.Corge();
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    target: (identifier)
+    value: (ternary_expression
+      condition: (call_expression
+        function: (member_expression
+          object: (identifier)
+          property: (identifier))
+        arguments: (argument_list))
+      consequence: (call_expression
+        function: (member_expression
+          object: (identifier)
+          property: (identifier))
+        arguments: (argument_list))
+      alternative: (call_expression
+        function: (member_expression
+          object: (identifier)
+          property: (identifier))
+        arguments: (argument_list)))))
+
+================================================================================
+neq inequality operator — simple
+================================================================================
+
+x = a neq b;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    target: (identifier)
+    value: (binary_expression
+      left: (identifier)
+      right: (identifier))))
+
+================================================================================
+neq chained with or (multiline, mirrors EV-M1 real usage)
+================================================================================
+
+if (x neq a or
+	y neq b)
+{
+	z = 1;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (if_statement
+    condition: (binary_expression
+      left: (binary_expression
+        left: (identifier)
+        right: (identifier))
+      right: (binary_expression
+        left: (identifier)
+        right: (identifier)))
+    consequence: (block
+      (assignment_statement
+        target: (identifier)
+        value: (number)))))
