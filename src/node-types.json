@@ -884,15 +884,15 @@
         "required": true,
         "types": [
           {
-            "type": "-",
-            "named": false
-          },
-          {
             "type": "identifier",
             "named": true
           },
           {
             "type": "member_expression",
+            "named": true
+          },
+          {
+            "type": "negative_number",
             "named": true
           },
           {
@@ -1043,6 +1043,21 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "negative_number",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "number",
+          "named": true
+        }
+      ]
     }
   },
   {

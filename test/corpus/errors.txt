@@ -36,3 +36,11 @@ local s = "never closed;
 local t = 1;
 
 --------------------------------------------------------------------------------
+
+(source_file
+  (ERROR
+    (identifier)
+    (ERROR))
+  (local_declaration
+    name: (identifier)
+    value: (number)))
