@@ -173,6 +173,33 @@ when (Mode)
           (number))))))
 
 ================================================================================
+when / is with negative enumerator value keeps its sign
+================================================================================
+
+when (Code)
+{
+	is (-1 or 2)
+	{
+		x = 1;
+	}
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (when_statement
+    (identifier)
+    (is_clause
+      (is_pattern_list
+        (negative_number
+          (number))
+        (number))
+      (block
+        (assignment_statement
+          (identifier)
+          (number))))))
+
+================================================================================
 or outside is-clause stays binary_expression
 ================================================================================
 

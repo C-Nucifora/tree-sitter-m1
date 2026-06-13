@@ -462,17 +462,21 @@
           "name": "number"
         },
         {
-          "type": "SEQ",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "-"
-            },
-            {
-              "type": "SYMBOL",
-              "name": "number"
-            }
-          ]
+          "type": "SYMBOL",
+          "name": "negative_number"
+        }
+      ]
+    },
+    "negative_number": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "-"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "number"
         }
       ]
     },
@@ -1311,6 +1315,10 @@
     ],
     [
       "_is_pattern",
+      "_expression"
+    ],
+    [
+      "negative_number",
       "_expression"
     ]
   ],
