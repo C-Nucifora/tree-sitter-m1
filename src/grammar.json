@@ -1306,14 +1306,6 @@
   ],
   "conflicts": [
     [
-      "assignment_statement",
-      "expression_statement"
-    ],
-    [
-      "is_pattern_list",
-      "binary_expression"
-    ],
-    [
       "_is_pattern",
       "_expression"
     ],

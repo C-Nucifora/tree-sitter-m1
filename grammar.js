@@ -54,14 +54,6 @@ module.exports = grammar({
   externals: ($) => [$.identifier, $.interpolation],
 
   conflicts: ($) => [
-    // `a.b` may be the target of an assignment or a standalone expression
-    // statement; both share the expression prefix until the operator/`;` is
-    // seen, so the parser must explore both reductions.
-    [$.assignment_statement, $.expression_statement],
-    // Inside `is (...)`, `A or B` is ambiguous between is_pattern_list and
-    // binary_expression until the `)` token disambiguates. GLR explores both;
-    // dynamic precedence on is_pattern_list wins.
-    [$.is_pattern_list, $.binary_expression],
     // The leading pattern in an is_pattern_list is ambiguous with _expression:
     // when the parser sees `identifier` after `is (`, it cannot yet tell
     // whether it is building a single _expression or the first _is_pattern.
