@@ -143,4 +143,47 @@ mod tests {
         let tree = parser.parse("x = $(SEG) + 1;\n", None).unwrap();
         assert!(!tree.root_node().has_error());
     }
+
+    /// Walk the tree and return the first node of `kind` (depth-first).
+    fn first_node_of_kind<'t>(
+        root: tree_sitter::Node<'t>,
+        kind: &str,
+    ) -> Option<tree_sitter::Node<'t>> {
+        let mut cursor = root.walk();
+        let mut stack = vec![root];
+        while let Some(node) = stack.pop() {
+            if node.kind() == kind {
+                return Some(node);
+            }
+            for child in node.children(&mut cursor) {
+                stack.push(child);
+            }
+        }
+        None
+    }
+
+    /// Regression: on CRLF (`\r\n`) line endings a `line_comment` must stop
+    /// before the carriage return, not absorb it. The token rule runs to the
+    /// end of the line, so without excluding `\r` the comment span ends one
+    /// byte past the visible text and that stray `\r` propagates downstream
+    /// (m1-fmt re-emits comment text, m1-lint counts the byte, highlighting
+    /// extends onto the line terminator). LF-only corpora never tripped it.
+    #[test]
+    fn line_comment_excludes_trailing_carriage_return() {
+        let mut parser = tree_sitter::Parser::new();
+        parser.set_language(&super::LANGUAGE.into()).unwrap();
+        let src = "// foo\r\nx = 1;\r\n";
+        let tree = parser.parse(src, None).unwrap();
+        let comment =
+            first_node_of_kind(tree.root_node(), "line_comment").expect("a line_comment node");
+        let text = &src[comment.byte_range()];
+        assert_eq!(
+            text, "// foo",
+            "line_comment span must stop before the CRLF carriage return, got {text:?}"
+        );
+        assert!(
+            !text.ends_with('\r'),
+            "line_comment must not absorb the trailing \\r on CRLF lines"
+        );
+    }
 }

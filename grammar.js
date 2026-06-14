@@ -296,7 +296,7 @@ module.exports = grammar({
     // its own line instead of swallowing the rest of the file.
     string: (_) => token(seq('"', /[^"\n]*/, '"')),
 
-    line_comment: (_) => token(seq("//", /[^\n]*/)),
+    line_comment: (_) => token(seq("//", /[^\r\n]*/)),
 
     block_comment: (_) => token(seq("/*", /[^*]*\*+([^/*][^*]*\*+)*/, "/")),
   },
