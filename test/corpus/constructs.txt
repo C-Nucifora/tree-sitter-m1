@@ -227,17 +227,17 @@ expand (SEG = 1 to 6)
 
 (source_file
   (expand_statement
-    (identifier)
-    (number)
-    (number)
+    variable: (identifier)
+    start: (number)
+    end: (number)
     (block
       (assignment_statement
-        (member_expression
-          (identifier)
-          (identifier))
-        (binary_expression
-          (identifier)
-          (number))))))
+        target: (member_expression
+          object: (identifier)
+          property: (identifier))
+        value: (binary_expression
+          left: (identifier)
+          right: (number))))))
 
 ================================================================================
 if / else if / else chain
@@ -463,3 +463,39 @@ if (x neq a or
       (assignment_statement
         target: (identifier)
         value: (number)))))
+
+================================================================================
+unary not and logical-not operators
+================================================================================
+
+x = not y;
+x = !z;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    target: (identifier)
+    value: (unary_expression
+      (identifier)))
+  (assignment_statement
+    target: (identifier)
+    value: (unary_expression
+      (identifier))))
+
+================================================================================
+boolean literals
+================================================================================
+
+x = true;
+local b = false;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    target: (identifier)
+    value: (boolean))
+  (local_declaration
+    name: (identifier)
+    value: (boolean)))
