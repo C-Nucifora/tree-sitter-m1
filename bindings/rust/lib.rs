@@ -186,4 +186,112 @@ mod tests {
             "line_comment must not absorb the trailing \\r on CRLF lines"
         );
     }
+
+    /// The set of M1 reserved keywords lives in two hand-maintained places that
+    /// MUST stay in sync: the anonymous string-literal keyword tokens in
+    /// `grammar.js` (surfacing as alphabetic *anonymous* node types in
+    /// `node-types.json`) and the `RESERVED[]` array in `src/scanner.c`. The
+    /// external scanner refuses to fold a reserved word into a space-joined
+    /// identifier segment; a keyword present in the grammar but missing from
+    /// `RESERVED[]` is silently swallowed into an identifier, and the construct
+    /// using it parses to an ERROR node. This drift is invisible to the corpus
+    /// suite (dropping a keyword from `RESERVED[]` passes every corpus test),
+    /// so it is pinned here instead.
+    ///
+    /// `EXPECTED` is the single source of truth. It MUST match the literals in
+    /// `src/scanner.c`'s `RESERVED[]` array. Updating one keyword means updating
+    /// `grammar.js`, `src/scanner.c` *and* this list — the two assertions below
+    /// fail if any of those drift apart.
+    const EXPECTED_RESERVED_KEYWORDS: &[&str] = &[
+        "local", "if", "else", "and", "or", "not", "eq", "neq", "true", "false", "static", "when",
+        "is", "expand", "to",
+    ];
+
+    /// Direction A: the keyword set the *grammar* actually produces (derived from
+    /// the generated `node-types.json`) must equal `EXPECTED_RESERVED_KEYWORDS`.
+    /// Catches a keyword added to / removed from `grammar.js` without updating
+    /// the expected list (and therefore the scanner).
+    #[test]
+    fn grammar_keyword_set_matches_expected() {
+        let node_types: serde_json::Value =
+            serde_json::from_str(super::NODE_TYPES_JSON).expect("node-types.json is valid JSON");
+        let mut grammar_keywords: Vec<String> = node_types
+            .as_array()
+            .expect("node-types.json is a JSON array")
+            .iter()
+            .filter(|entry| entry.get("named").and_then(|n| n.as_bool()) == Some(false))
+            .filter_map(|entry| entry.get("type").and_then(|t| t.as_str()))
+            // Alphabetic anonymous node types are exactly the reserved keywords;
+            // punctuation/operator tokens (`{`, `==`, `<<=`, …) are excluded.
+            .filter(|t| t.chars().all(|c| c.is_ascii_alphabetic() || c == '_'))
+            .map(|t| t.to_string())
+            .collect();
+        grammar_keywords.sort();
+        grammar_keywords.dedup();
+
+        let mut expected: Vec<String> = EXPECTED_RESERVED_KEYWORDS
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        expected.sort();
+
+        assert_eq!(
+            grammar_keywords, expected,
+            "grammar keyword set (alphabetic anonymous node types in node-types.json) drifted \
+             from EXPECTED_RESERVED_KEYWORDS. A keyword added to or removed from grammar.js must \
+             also be reflected in EXPECTED_RESERVED_KEYWORDS and in src/scanner.c's RESERVED[]."
+        );
+    }
+
+    /// Direction B: every keyword in `EXPECTED_RESERVED_KEYWORDS` must appear as a
+    /// quoted literal inside `src/scanner.c`'s `RESERVED[]` initializer. Catches a
+    /// keyword dropped from the scanner (the silent-swallow regression) without
+    /// re-running the parser generator.
+    #[test]
+    fn scanner_reserved_array_matches_expected() {
+        const SCANNER_C: &str = include_str!("../../src/scanner.c");
+        let start = SCANNER_C
+            .find("RESERVED[]")
+            .expect("RESERVED[] declaration present in scanner.c");
+        let open = SCANNER_C[start..]
+            .find('{')
+            .map(|i| start + i)
+            .expect("RESERVED[] opening brace");
+        let close = SCANNER_C[open..]
+            .find('}')
+            .map(|i| open + i)
+            .expect("RESERVED[] closing brace");
+        let initializer = &SCANNER_C[open..=close];
+
+        for kw in EXPECTED_RESERVED_KEYWORDS {
+            let needle = format!("\"{kw}\"");
+            assert!(
+                initializer.contains(&needle),
+                "src/scanner.c RESERVED[] is missing keyword {needle}; the external scanner will \
+                 swallow it into identifiers and constructs using it will parse to ERROR. Keep \
+                 RESERVED[] in sync with EXPECTED_RESERVED_KEYWORDS (and grammar.js)."
+            );
+        }
+
+        // Guard the reverse too: a stray quoted word in RESERVED[] that is not a
+        // real grammar keyword would over-reserve and break valid identifiers.
+        let quoted: Vec<&str> = initializer
+            .split('"')
+            .skip(1)
+            .step_by(2)
+            .filter(|s| !s.is_empty())
+            .collect();
+        let mut scanner_reserved: Vec<String> = quoted.iter().map(|s| s.to_string()).collect();
+        scanner_reserved.sort();
+        scanner_reserved.dedup();
+        let mut expected: Vec<String> = EXPECTED_RESERVED_KEYWORDS
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        expected.sort();
+        assert_eq!(
+            scanner_reserved, expected,
+            "src/scanner.c RESERVED[] contents drifted from EXPECTED_RESERVED_KEYWORDS"
+        );
+    }
 }
