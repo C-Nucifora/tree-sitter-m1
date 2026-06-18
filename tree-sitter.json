@@ -11,7 +11,7 @@
     }
   ],
   "metadata": {
-    "version": "0.7.0",
+    "version": "0.7.1",
     "description": "Tree-sitter grammar for the MoTeC M1 script language (.m1scr)"
   },
   "bindings": {
