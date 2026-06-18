@@ -31,6 +31,17 @@ pub const TEXTOBJECTS_QUERY: &str = include_str!("../../queries/textobjects.scm"
 /// consumed by downstream codegen (e.g. m1-core's `Kind` generator).
 pub const NODE_TYPES_JSON: &str = include_str!("../../src/node-types.json");
 
+/// The tree-sitter grammar metadata (`tree-sitter.json`). Its
+/// `metadata.version` is what `tree-sitter generate` embeds into the generated
+/// `src/parser.c` `TSLanguageMetadata`, so it must agree with the crate version.
+#[cfg(test)]
+const TREE_SITTER_JSON: &str = include_str!("../../tree-sitter.json");
+
+/// The npm package manifest (`package.json`); its `version` field is the third
+/// independently-declared version string that must agree with the crate.
+#[cfg(test)]
+const PACKAGE_JSON: &str = include_str!("../../package.json");
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -63,6 +74,50 @@ mod tests {
                 "expected `{src:?}` to parse without errors"
             );
         }
+    }
+
+    /// The three independently-declared version strings must agree:
+    /// `Cargo.toml` (`CARGO_PKG_VERSION`), `tree-sitter.json` `metadata.version`,
+    /// and `package.json` `version`. This matters because `tree-sitter generate`
+    /// embeds `tree-sitter.json`'s `metadata.version` into the generated
+    /// `src/parser.c` `TSLanguageMetadata`, while the release tag is driven
+    /// solely by `Cargo.toml`. The CI "generated parser is fresh" gate
+    /// regenerates `parser.c` *from* `tree-sitter.json`, so it can never catch a
+    /// `tree-sitter.json` that is stale relative to `Cargo.toml` — the two always
+    /// agree by construction. Without this assertion, a release that bumps
+    /// `Cargo.toml` but forgets `tree-sitter.json`/`package.json` ships a tag
+    /// whose embedded parser metadata version is the *previous* release's number,
+    /// with fully green CI. Pin all three here so that divergence fails fast.
+    #[test]
+    fn declared_versions_agree() {
+        let cargo_version = env!("CARGO_PKG_VERSION");
+
+        let ts_json: serde_json::Value =
+            serde_json::from_str(super::TREE_SITTER_JSON).expect("tree-sitter.json is valid JSON");
+        let ts_version = ts_json
+            .get("metadata")
+            .and_then(|m| m.get("version"))
+            .and_then(|v| v.as_str())
+            .expect("tree-sitter.json has metadata.version string");
+        assert_eq!(
+            ts_version, cargo_version,
+            "tree-sitter.json metadata.version ({ts_version}) differs from Cargo.toml version \
+             ({cargo_version}). tree-sitter generate embeds metadata.version into src/parser.c's \
+             TSLanguageMetadata, but the release tag comes from Cargo.toml — they must match, and \
+             the parser-freshness CI gate cannot detect this divergence."
+        );
+
+        let pkg_json: serde_json::Value =
+            serde_json::from_str(super::PACKAGE_JSON).expect("package.json is valid JSON");
+        let pkg_version = pkg_json
+            .get("version")
+            .and_then(|v| v.as_str())
+            .expect("package.json has version string");
+        assert_eq!(
+            pkg_version, cargo_version,
+            "package.json version ({pkg_version}) differs from Cargo.toml version \
+             ({cargo_version}); keep all three declared versions in sync."
+        );
     }
 
     #[test]
