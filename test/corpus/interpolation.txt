@@ -50,3 +50,45 @@ expand (SEG = 1 to 6)
         (binary_expression
           (interpolation)
           (number))))))
+
+================================================================================
+interpolation glued to a word (name-led and interp-led)
+================================================================================
+
+Root.Foo = Channel$(N);
+Root.Bar = $(N)Suffix;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    (member_expression
+      (identifier)
+      (identifier))
+    (identifier))
+  (assignment_statement
+    (member_expression
+      (identifier)
+      (identifier))
+    (identifier)))
+
+================================================================================
+interpolation glued to a digit-led numeric literal
+================================================================================
+
+Root.X = 1$(N);
+Root.Y = 1$(N)2;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (assignment_statement
+    (member_expression
+      (identifier)
+      (identifier))
+    (number))
+  (assignment_statement
+    (member_expression
+      (identifier)
+      (identifier))
+    (number)))

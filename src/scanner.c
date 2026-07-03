@@ -182,22 +182,44 @@ bool tree_sitter_m1_external_scanner_scan(void *payload, TSLexer *lexer,
 
   /* Extend with " <unit>" while the next unit is not a reserved word. A
    * continuation word may begin with a digit ("XV Glim 4", "Glonk 9"); a unit
-   * may also be a `$(...)` interpolation ("naxID Bnk $(SEG) Vlim $(NODE)"). */
+   * may also be a `$(...)` interpolation ("naxID Bnk $(SEG) Vlim $(NODE)").
+   *
+   * A `$(...)` may also be glued to a word with NO separating space, in either
+   * order — `Channel$(N)`, `$(N)Foo`, `$(A)$(B)` — because the manual allows
+   * expansion "anywhere in the code", not only at name-unit boundaries. Such an
+   * adjacency is always part of one interpolated name segment, so we absorb it
+   * directly (no reserved-word check: a keyword only delimits when a real space
+   * precedes it — `$(N)eq` is glued text, `$(N) eq` is the operator). */
   bool extended = false;
+  bool last_was_interp = leads_with_interp;
   for (;;) {
-    if (lexer->lookahead != ' ') {
-      break;
-    }
-    lexer->advance(lexer, false); /* tentatively consume the space */
     if (lexer->lookahead == '$') {
+      /* Interpolation glued directly to the previous unit (no space). */
       if (!try_read_interp(lexer)) {
         break;
       }
-    } else if (is_word_char(lexer->lookahead)) {
-      char next[64];
-      read_word(lexer, next, sizeof(next));
-      if (is_reserved(next)) {
-        break; /* leave the consumed " <kw>" as look-ahead via mark_end */
+      last_was_interp = true;
+    } else if (last_was_interp && is_word_char(lexer->lookahead)) {
+      /* A word glued directly after an interpolation: `$(N)Foo`. */
+      char glued[64];
+      read_word(lexer, glued, sizeof(glued));
+      last_was_interp = false;
+    } else if (lexer->lookahead == ' ') {
+      lexer->advance(lexer, false); /* tentatively consume the space */
+      if (lexer->lookahead == '$') {
+        if (!try_read_interp(lexer)) {
+          break;
+        }
+        last_was_interp = true;
+      } else if (is_word_char(lexer->lookahead)) {
+        char next[64];
+        read_word(lexer, next, sizeof(next));
+        if (is_reserved(next)) {
+          break; /* leave the consumed " <kw>" as look-ahead via mark_end */
+        }
+        last_was_interp = false;
+      } else {
+        break;
       }
     } else {
       break;

@@ -20,18 +20,8 @@ fi
 
 cd "$here" || exit 2
 
-total=0
-failed=0
-fail_list=""
-
-while IFS= read -r f; do
-  total=$((total + 1))
-  out="$(npx tree-sitter parse --quiet "$f" 2>&1)"
-  if printf '%s' "$out" | grep -qE 'ERROR|MISSING'; then
-    failed=$((failed + 1))
-    fail_list="$fail_list  $f\n"
-  fi
-done < <(find "$corpus" -name '*.m1scr')
+mapfile -t files < <(find "$corpus" -name '*.m1scr')
+total=${#files[@]}
 
 # Zero files is a hard error, not a pass: a missing or mistyped corpus dir
 # previously made the gate green while testing nothing (#51).
@@ -41,9 +31,22 @@ if [ "$total" -eq 0 ]; then
   exit 1
 fi
 
+# Parse every script in ONE tree-sitter invocation (xargs batches to respect
+# ARG_MAX) rather than spawning `npx tree-sitter` per file — ~80x faster on a
+# large corpus, so gating the second corpus (AV-M1, ~1450 files) stays cheap.
+# Quiet mode prints one tab-separated line per file; a parse error carries an
+# ERROR/MISSING node on that file's line, with the path at the start.
+parse_out="$(printf '%s\0' "${files[@]}" | xargs -0 npx tree-sitter parse --quiet 2>/dev/null)"
+fail_list="$(printf '%s\n' "$parse_out" | grep -E 'ERROR|MISSING' | sed -E 's/\t.*//; s/^/  /')"
+if [ -n "$fail_list" ]; then
+  failed="$(printf '%s\n' "$fail_list" | grep -c .)"
+else
+  failed=0
+fi
+
 echo "parsed $total scripts; $failed with ERROR/MISSING nodes"
 if [ "$failed" -ne 0 ]; then
-  printf 'FAILURES:\n%b' "$fail_list"
+  printf 'FAILURES:\n%s\n' "$fail_list"
   exit 1
 fi
 echo "OK — corpus parses clean"
