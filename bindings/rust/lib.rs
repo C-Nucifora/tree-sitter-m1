@@ -76,6 +76,46 @@ mod tests {
         }
     }
 
+    /// Native #95 rejects `1e-05`; applying that rule to the other bare
+    /// mantissas is a conservative inference, not a native-verified matrix.
+    /// Check each spelling independently so one failure cannot hide another.
+    #[test]
+    fn scientific_literals_require_decimal_mantissas() {
+        let mut parser = tree_sitter::Parser::new();
+        parser.set_language(&super::LANGUAGE.into()).unwrap();
+        for exponent in ["e-05", "E-05", "e+05", "E+05", "e05", "E05"] {
+            for sign in ["", "-", "+"] {
+                for (mantissa, decimal) in [("1", false), ("1.0", true)] {
+                    let literal = format!("{sign}{mantissa}{exponent}");
+                    // Unary plus is already unsupported; this change does not
+                    // expand the operator grammar while fixing numeric tokens.
+                    let expected_error = !decimal || sign == "+";
+                    for source in [
+                        format!("local <Floating Point> scale = {literal};\n"),
+                        format!("result = factor * {literal};\n"),
+                    ] {
+                        let tree = parser.parse(&source, None).unwrap();
+                        assert_eq!(
+                            tree.root_node().has_error(),
+                            expected_error,
+                            "unexpected parse result for {source:?}: {}",
+                            tree.root_node().to_sexp()
+                        );
+                    }
+                }
+            }
+        }
+        for literal in ["0.00001", "-0.00001", "1", "-1", "1u", "0x1Fu"] {
+            for source in [
+                format!("local scale = {literal};\n"),
+                format!("result = factor * {literal};\n"),
+            ] {
+                let tree = parser.parse(&source, None).unwrap();
+                assert!(!tree.root_node().has_error(), "{source:?}");
+            }
+        }
+    }
+
     /// The three independently-declared version strings must agree:
     /// `Cargo.toml` (`CARGO_PKG_VERSION`), `tree-sitter.json` `metadata.version`,
     /// and `package.json` `version`. This matters because `tree-sitter generate`
