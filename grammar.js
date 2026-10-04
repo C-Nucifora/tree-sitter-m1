@@ -282,7 +282,9 @@ module.exports = grammar({
         choice(
           /0[xX][0-9a-fA-F]+[uU]?/,
           /\d+\.\d+([eE][+-]?\d+)?/,
-          /\d+[eE][+-]?\d+/,
+          // Native Build rejects `1e-05` (#95). Conservatively require a
+          // decimal mantissa for scientific notation; the other bare-exponent
+          // spellings are inferred from that result, not native-matrix tested.
           // A digit-led numeric literal built by `$(VAR)` interpolation, e.g.
           // `1$(N)` → 10/11/… after expansion. The manual allows expansion
           // "anywhere in the code"; a name-led interpolation is an identifier

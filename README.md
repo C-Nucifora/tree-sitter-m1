@@ -37,6 +37,15 @@ preserving "one identifier = one path segment".
 > All example identifiers in this repo (grammar comments, corpus tests, docs)
 > are synthetic placeholders, not drawn from any real project.
 
+Scientific literals require a decimal mantissa, such as `1.0e-05` or
+`1.0E+05`; `0.00001` also remains valid. Native M1 Build rejected `1e-05`
+([#95](https://github.com/C-Nucifora/tree-sitter-m1/issues/95)). Requiring a
+decimal point for the other bare-mantissa exponent spellings is a conservative
+inference from that observation: the complete native case/sign matrix was
+unavailable, and the manual does not specify this spelling rule. The parser
+tests cover that inferred rule while preserving existing decimal exponent
+forms and the existing rejection of unary `+`.
+
 ## Develop
 
 ```sh
