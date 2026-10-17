@@ -154,7 +154,7 @@ bool tree_sitter_m1_external_scanner_scan(void *payload, TSLexer *lexer,
   } else if (is_word_start(lexer->lookahead)) {
     char word[64];
     read_word(lexer, word, sizeof(word));
-    if (is_reserved(word)) {
+    if (is_reserved(word) && lexer->lookahead != '$') {
       return false; /* let the grammar match the keyword */
     }
   } else {
@@ -214,7 +214,7 @@ bool tree_sitter_m1_external_scanner_scan(void *payload, TSLexer *lexer,
       } else if (is_word_char(lexer->lookahead)) {
         char next[64];
         read_word(lexer, next, sizeof(next));
-        if (is_reserved(next)) {
+        if (is_reserved(next) && lexer->lookahead != '$') {
           break; /* leave the consumed " <kw>" as look-ahead via mark_end */
         }
         last_was_interp = false;
