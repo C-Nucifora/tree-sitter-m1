@@ -9,7 +9,7 @@
 #   real-world corpora live outside this repo, so point this at your own
 #   directory of .m1scr scripts.
 
-set -u
+set -uo pipefail
 
 here="$(cd "$(dirname "$0")/.." && pwd)"
 corpus="${1:-${M1_CORPUS_PATH:-}}"
@@ -36,7 +36,8 @@ fi
 # large corpus, so gating the second corpus (AV-M1, ~1450 files) stays cheap.
 # Quiet mode prints one tab-separated line per file; a parse error carries an
 # ERROR/MISSING node on that file's line, with the path at the start.
-parse_out="$(printf '%s\0' "${files[@]}" | xargs -0 npx tree-sitter parse --quiet 2>/dev/null)"
+parse_status=0
+parse_out="$(printf '%s\0' "${files[@]}" | xargs -0 npx tree-sitter parse --quiet)" || parse_status=$?
 fail_list="$(printf '%s\n' "$parse_out" | grep -E 'ERROR|MISSING' | sed -E 's/\t.*//; s/^/  /')"
 if [ -n "$fail_list" ]; then
   failed="$(printf '%s\n' "$fail_list" | grep -c .)"
@@ -47,6 +48,10 @@ fi
 echo "parsed $total scripts; $failed with ERROR/MISSING nodes"
 if [ "$failed" -ne 0 ]; then
   printf 'FAILURES:\n%s\n' "$fail_list"
+  exit 1
+fi
+if [ "$parse_status" -ne 0 ]; then
+  echo "ERROR: corpus parser failed with status $parse_status" >&2
   exit 1
 fi
 echo "OK — corpus parses clean"
