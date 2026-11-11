@@ -20,7 +20,13 @@ fi
 
 cd "$here" || exit 2
 
-mapfile -t files < <(find "$corpus" -name '*.m1scr')
+file_list="$(mktemp)" || exit 2
+trap 'rm -f -- "$file_list"' EXIT
+if ! find "$corpus" -type f -name '*.m1scr' -print0 > "$file_list"; then
+  echo "ERROR: could not completely discover scripts under $corpus" >&2
+  exit 1
+fi
+mapfile -d '' -t files < "$file_list"
 total=${#files[@]}
 
 # Zero files is a hard error, not a pass: a missing or mistyped corpus dir
