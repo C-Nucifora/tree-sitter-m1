@@ -31,9 +31,8 @@ pub const TEXTOBJECTS_QUERY: &str = include_str!("../../queries/textobjects.scm"
 /// consumed by downstream codegen (e.g. m1-core's `Kind` generator).
 pub const NODE_TYPES_JSON: &str = include_str!("../../src/node-types.json");
 
-/// The tree-sitter grammar metadata (`tree-sitter.json`). Its
-/// `metadata.version` is what `tree-sitter generate` embeds into the generated
-/// `src/parser.c` `TSLanguageMetadata`, so it must agree with the crate version.
+/// The tree-sitter grammar manifest (`tree-sitter.json`). Its declared version
+/// must agree with the crate version. ABI 14 does not embed version metadata.
 #[cfg(test)]
 const TREE_SITTER_JSON: &str = include_str!("../../tree-sitter.json");
 
@@ -116,18 +115,8 @@ mod tests {
         }
     }
 
-    /// The three independently-declared version strings must agree:
-    /// `Cargo.toml` (`CARGO_PKG_VERSION`), `tree-sitter.json` `metadata.version`,
-    /// and `package.json` `version`. This matters because `tree-sitter generate`
-    /// embeds `tree-sitter.json`'s `metadata.version` into the generated
-    /// `src/parser.c` `TSLanguageMetadata`, while the release tag is driven
-    /// solely by `Cargo.toml`. The CI "generated parser is fresh" gate
-    /// regenerates `parser.c` *from* `tree-sitter.json`, so it can never catch a
-    /// `tree-sitter.json` that is stale relative to `Cargo.toml` — the two always
-    /// agree by construction. Without this assertion, a release that bumps
-    /// `Cargo.toml` but forgets `tree-sitter.json`/`package.json` ships a tag
-    /// whose embedded parser metadata version is the *previous* release's number,
-    /// with fully green CI. Pin all three here so that divergence fails fast.
+    /// Keep the crate, grammar manifest and npm package versions aligned.
+    /// Parser freshness alone cannot detect inconsistent release declarations.
     #[test]
     fn declared_versions_agree() {
         let cargo_version = env!("CARGO_PKG_VERSION");
@@ -216,17 +205,124 @@ mod tests {
     fn unterminated_interpolation_does_not_blow_up() {
         let mut parser = tree_sitter::Parser::new();
         parser.set_language(&super::LANGUAGE.into()).unwrap();
-        let src = format!("x = {};\n", "$(".repeat(50_000));
-        let start = std::time::Instant::now();
-        let tree = parser.parse(&src, None).unwrap();
-        let elapsed = start.elapsed();
-        // The `$(` never close, so it is a parse error — but it must error *fast*.
+        for prefix in ["$(", "1$("] {
+            let src = format!("x = {};\n", prefix.repeat(50_000));
+            let start = std::time::Instant::now();
+            let tree = parser.parse(&src, None).unwrap();
+            let elapsed = start.elapsed();
+            assert!(tree.root_node().has_error());
+            assert!(
+                elapsed < std::time::Duration::from_secs(5),
+                "unterminated {prefix:?} x50000 took {elapsed:?}; expected <5s"
+            );
+        }
+    }
+
+    #[test]
+    fn interpolated_numbers_preserve_spans_and_share_the_scan_bound() {
+        let mut parser = tree_sitter::Parser::new();
+        parser.set_language(&super::LANGUAGE.into()).unwrap();
+        for whitespace in [" ", "\t", "\n", "\r", "\x0c", "\x0b"] {
+            for literal in [
+                "1$(N)",
+                "12$(N)34$(M)56",
+                "1$()",
+                "0xFFu",
+                "12u",
+                "1.0e-3",
+                "0",
+            ] {
+                let source = format!("value ={whitespace}{literal};\n");
+                let tree = parser.parse(&source, None).unwrap();
+                assert!(!tree.root_node().has_error(), "{source:?}");
+                let number = first_node_of_kind(tree.root_node(), "number").unwrap();
+                let start = "value =".len() + whitespace.len();
+                assert_eq!(number.byte_range(), start..start + literal.len());
+                assert_eq!(&source[number.byte_range()], literal);
+                let (row, column) = if whitespace == "\n" {
+                    (1, 0)
+                } else {
+                    (0, start)
+                };
+                assert_eq!(
+                    number.start_position(),
+                    tree_sitter::Point::new(row, column)
+                );
+                assert_eq!(
+                    number.end_position(),
+                    tree_sitter::Point::new(row, column + literal.len())
+                );
+                assert_eq!(number.child_count(), 0);
+            }
+        }
+        for character in ['A', 'α', '🦀'] {
+            for count in [256, 257] {
+                let body: String = std::iter::repeat_n(character, count).collect();
+                let source = format!("value = 1$({body})2;\n");
+                let tree = parser.parse(&source, None).unwrap();
+                assert_eq!(
+                    tree.root_node().has_error(),
+                    count > 256,
+                    "{character:?} x {count}"
+                );
+            }
+        }
+        let source = "value = 1$(N)2$(;\n";
+        let tree = parser.parse(source, None).unwrap();
         assert!(tree.root_node().has_error());
-        assert!(
-            elapsed < std::time::Duration::from_secs(5),
-            "unterminated `$(` x50000 took {elapsed:?}; expected <5s (O(n) parse). \
-             A regression to O(n^2) re-introduces the scanner DoS (#35)."
-        );
+        let number = first_node_of_kind(tree.root_node(), "number").unwrap();
+        assert_eq!(&source[number.byte_range()], "1$(N)2");
+    }
+
+    #[test]
+    fn numeric_interpolation_edits_match_fresh_trees() {
+        let mut parser = tree_sitter::Parser::new();
+        parser.set_language(&super::LANGUAGE.into()).unwrap();
+        for source in ["x = 12;", "x = 1$(N)2$(M);", "x = 1$(;", "x = 1$(α)2;"] {
+            for start in (0..=source.len()).filter(|&i| source.is_char_boundary(i)) {
+                for insert in ["$(N)", "7", ")", "\n", "α"] {
+                    let mut old = parser.parse(source, None).unwrap();
+                    let edited = format!("{}{insert}{}", &source[..start], &source[start..]);
+                    let point_at = |s: &str, end: usize| {
+                        let prefix = &s[..end];
+                        tree_sitter::Point::new(
+                            prefix.bytes().filter(|&b| b == b'\n').count(),
+                            prefix.len() - prefix.rfind('\n').map_or(0, |i| i + 1),
+                        )
+                    };
+                    old.edit(&tree_sitter::InputEdit {
+                        start_byte: start,
+                        old_end_byte: start,
+                        new_end_byte: start + insert.len(),
+                        start_position: point_at(source, start),
+                        old_end_position: point_at(source, start),
+                        new_end_position: point_at(&edited, start + insert.len()),
+                    });
+                    let incremental = parser.parse(&edited, Some(&old)).unwrap();
+                    let fresh = parser.parse(&edited, None).unwrap();
+                    assert_eq!(
+                        incremental.root_node().to_sexp(),
+                        fresh.root_node().to_sexp(),
+                        "{edited:?}"
+                    );
+                    let spans = |tree: &tree_sitter::Tree| {
+                        let mut stack = vec![tree.root_node()];
+                        let mut spans = Vec::new();
+                        while let Some(node) = stack.pop() {
+                            spans.push((
+                                node.kind_id(),
+                                node.byte_range(),
+                                node.start_position(),
+                                node.end_position(),
+                            ));
+                            stack.extend(node.children(&mut node.walk()));
+                        }
+                        spans
+                    };
+                    assert_eq!(spans(&incremental), spans(&fresh), "{edited:?}");
+                }
+            }
+        }
     }
 
     /// The interpolation scan bound must not reject legitimate interpolations,

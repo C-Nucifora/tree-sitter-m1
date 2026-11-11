@@ -1,7 +1,8 @@
 /*
  * scanner.c — external scanner for the M1 tree-sitter grammar.
  *
- * Produces a single external token: `identifier`. An identifier is one path
+ * Produces identifiers, standalone interpolations and interpolated numbers.
+ * An identifier is one path
  * *segment*: a run of words ([A-Za-z_][A-Za-z0-9_]*) joined by single spaces,
  * where no word is a reserved keyword.
  *
@@ -20,6 +21,8 @@
  * v2: a standalone `$(...)` operand (e.g. `x = $(SEG) + 1`) is emitted as a
  * separate INTERPOLATION token; a `$(...)` that leads a multi-word name folds
  * into the IDENTIFIER segment as before.
+ * Digit-led interpolation uses the same bounded reader and is exposed as a
+ * `number` leaf by the grammar.
  */
 
 #include "tree_sitter/parser.h"
@@ -27,7 +30,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-enum TokenType { IDENTIFIER, INTERPOLATION };
+enum TokenType { IDENTIFIER, INTERPOLATION, INTERPOLATED_NUMBER };
 
 /* Mirrors the keyword tokens in grammar.js. Keep the two in sync. */
 static const char *const RESERVED[] = {
@@ -129,14 +132,38 @@ void tree_sitter_m1_external_scanner_deserialize(void *payload, const char *buff
 bool tree_sitter_m1_external_scanner_scan(void *payload, TSLexer *lexer,
                                           const bool *valid_symbols) {
   (void)payload;
-  if (!valid_symbols[IDENTIFIER] && !valid_symbols[INTERPOLATION]) {
+  if (!valid_symbols[IDENTIFIER] && !valid_symbols[INTERPOLATION] &&
+      !valid_symbols[INTERPOLATED_NUMBER]) {
     return false;
   }
 
   /* Skip leading whitespace; it is never part of the token. */
   while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-         lexer->lookahead == '\n' || lexer->lookahead == '\r') {
+         lexer->lookahead == '\n' || lexer->lookahead == '\r' ||
+         lexer->lookahead == '\f' || lexer->lookahead == '\v') {
     lexer->advance(lexer, true);
+  }
+
+  if (valid_symbols[INTERPOLATED_NUMBER] &&
+      lexer->lookahead >= '0' && lexer->lookahead <= '9') {
+    while (lexer->lookahead >= '0' && lexer->lookahead <= '9') {
+      lexer->advance(lexer, false);
+    }
+    bool complete = false;
+    while (lexer->lookahead == '$') {
+      if (!try_read_interp(lexer)) {
+        break;
+      }
+      while (lexer->lookahead >= '0' && lexer->lookahead <= '9') {
+        lexer->advance(lexer, false);
+      }
+      lexer->mark_end(lexer);
+      complete = true;
+    }
+    /* Plain numbers use the internal lexer. An incomplete suffix stays outside
+     * the last complete token, so recovery never rescans an unbounded body. */
+    lexer->result_symbol = INTERPOLATED_NUMBER;
+    return complete;
   }
 
   bool leads_with_interp = false;

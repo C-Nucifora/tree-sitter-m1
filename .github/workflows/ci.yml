@@ -116,7 +116,7 @@ jobs:
       # tree-sitter.json exactly (#52). Mirrors m1-core's kind_rs_is_fresh.
       - name: Generated parser is fresh
         run: |
-          npx tree-sitter generate
+          npm run generate
           git diff --exit-code -- src/
 
   msrv:
