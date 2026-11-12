@@ -19,7 +19,7 @@ spec; the two real-world corpora are the acceptance test.
   means touching both.
 - **`src/parser.c` is generated but committed** (so Rust consumers build
   without the tree-sitter CLI). Any `grammar.js` change requires regenerating
-  (`npx tree-sitter generate`) and committing the result in the same change.
+  (`npm run generate`, ABI 14 for Neovim 0.10) and committing the result in the same change.
 - **`$(VAR)` interpolation is positional**: standalone operand → its own
   node; inside a multi-word name → part of the identifier segment. Keep "one
   identifier = one path segment" intact.

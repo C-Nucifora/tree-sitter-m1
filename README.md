@@ -50,10 +50,13 @@ forms and the existing rejection of unary `+`.
 
 ```sh
 npm install                 # gets the tree-sitter CLI locally
-npx tree-sitter generate    # regenerate src/parser.c from grammar.js
+npm run generate           # regenerate src/parser.c with ABI 14
 npx tree-sitter test        # corpus tests
 scripts/check-corpus.sh DIR # parse a real corpus dir; fail on ERROR/MISSING
 ```
+
+The generated parser uses ABI 14 so Neovim 0.10 can load it.
+Use `npm run generate` to preserve that compatibility.
 
 `src/parser.c` is generated but **committed**, so the Rust crate builds
 without the tree-sitter CLI — regenerate and commit it together with any

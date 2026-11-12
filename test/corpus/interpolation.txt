@@ -78,6 +78,7 @@ interpolation glued to a digit-led numeric literal
 
 Root.X = 1$(N);
 Root.Y = 1$(N)2;
+Root.Z = 12$(N)34$(M)56;
 
 --------------------------------------------------------------------------------
 
@@ -91,4 +92,29 @@ Root.Y = 1$(N)2;
     (member_expression
       (identifier)
       (identifier))
+    (number))
+  (assignment_statement
+    (member_expression
+      (identifier)
+      (identifier))
     (number)))
+
+================================================================================
+numeric interpolation in positive and negative is patterns
+================================================================================
+
+when (Code) { is (1$(N) or -2$(M)) { value = 0; } }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (when_statement
+    (identifier)
+    (is_clause
+      (is_pattern_list
+        (number)
+        (negative_number (number)))
+      (block
+        (assignment_statement
+          (identifier)
+          (number))))))

@@ -459,7 +459,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "number"
+          "name": "_number"
         },
         {
           "type": "SYMBOL",
@@ -476,7 +476,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "number"
+          "name": "_number"
         }
       ]
     },
@@ -570,7 +570,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "number"
+          "name": "_number"
         },
         {
           "type": "SYMBOL",
@@ -1196,6 +1196,24 @@
         }
       ]
     },
+    "_number": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "number"
+        },
+        {
+          "type": "ALIAS",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_interpolated_number"
+          },
+          "named": true,
+          "value": "number"
+        }
+      ]
+    },
     "number": {
       "type": "TOKEN",
       "content": {
@@ -1208,10 +1226,6 @@
           {
             "type": "PATTERN",
             "value": "\\d+\\.\\d+([eE][+-]?\\d+)?"
-          },
-          {
-            "type": "PATTERN",
-            "value": "\\d+(\\$\\([^)\\r\\n]*\\)\\d*)+"
           },
           {
             "type": "PATTERN",
@@ -1323,6 +1337,10 @@
     {
       "type": "SYMBOL",
       "name": "interpolation"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_interpolated_number"
     }
   ],
   "inline": [],

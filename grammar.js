@@ -48,10 +48,9 @@ module.exports = grammar({
   // Whitespace and comments are insignificant between tokens.
   extras: ($) => [/\s/, $.line_comment, $.block_comment],
 
-  // The space-joined path segment and the standalone `$(VAR)` interpolation are
-  // both produced by the external scanner. ORDER MUST MATCH the TokenType enum
-  // in src/scanner.c (IDENTIFIER, INTERPOLATION).
-  externals: ($) => [$.identifier, $.interpolation],
+  // ORDER MUST MATCH TokenType in src/scanner.c. Interpolated numbers share
+  // the scanner's bounded interpolation reader with names and operands.
+  externals: ($) => [$.identifier, $.interpolation, $._interpolated_number],
 
   conflicts: ($) => [
     // The leading pattern in an is_pattern_list is ambiguous with _expression:
@@ -176,7 +175,7 @@ module.exports = grammar({
       choice(
         $.member_expression,
         $.identifier,
-        $.number,
+        $._number,
         $.negative_number,
       ),
 
@@ -184,7 +183,7 @@ module.exports = grammar({
     // `-` and the number in one named node keeps a pattern as exactly one
     // named child carrying the full text including the sign, instead of a
     // detached anonymous `-` token next to an unsigned `number`.
-    negative_number: ($) => seq("-", $.number),
+    negative_number: ($) => seq("-", $._number),
 
     // Compile-time loop: `expand (VAR = <start> to <end>) { ... }`. The body is
     // text-substituted for each value; $(VAR) interpolations live in the body.
@@ -212,7 +211,7 @@ module.exports = grammar({
         $.binary_expression,
         $.ternary_expression,
         $.parenthesized_expression,
-        $.number,
+        $._number,
         $.boolean,
         $.string,
       ),
@@ -277,6 +276,9 @@ module.exports = grammar({
     },
 
     // ---- Tokens -------------------------------------------------------------
+    // Keep both forms as public leaf nodes named `number`.
+    _number: ($) => choice($.number, alias($._interpolated_number, $.number)),
+
     number: (_) =>
       token(
         choice(
@@ -285,12 +287,6 @@ module.exports = grammar({
           // Native Build rejects `1e-05` (#95). Conservatively require a
           // decimal mantissa for scientific notation; the other bare-exponent
           // spellings are inferred from that result, not native-matrix tested.
-          // A digit-led numeric literal built by `$(VAR)` interpolation, e.g.
-          // `1$(N)` → 10/11/… after expansion. The manual allows expansion
-          // "anywhere in the code"; a name-led interpolation is an identifier
-          // (see the external scanner), a digit-led one is a number. Matched as
-          // one token since it denotes a single literal.
-          /\d+(\$\([^)\r\n]*\)\d*)+/,
           /\d+[uU]?/,
         ),
       ),

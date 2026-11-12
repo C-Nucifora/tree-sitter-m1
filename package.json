@@ -5,7 +5,7 @@
   "license": "GPL-3.0-or-later",
   "description": "Tree-sitter grammar for the MoTeC M1 script language (.m1scr)",
   "scripts": {
-    "generate": "tree-sitter generate",
+    "generate": "tree-sitter generate --abi 14",
     "test": "tree-sitter test",
     "parse": "tree-sitter parse"
   },
